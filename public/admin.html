@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin — Jossy Sagide</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root { --orange:#e85d2f; --orange-light:#f07a52; --orange-pale:#fdf0ea; --charcoal:#2b2b2b; --gray:#888; --gray-light:#e8e3dc; --green:#4a9a6a; --green-bg:#edf7f2; --blue:#3a6fa8; --blue-bg:#eaf0f9; --red:#c0392b; --red-bg:#fdf0f0; --white:#fff; }
+  body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f4f2ee; color:var(--charcoal); font-size:14px; min-height:100vh; }
+
+  .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--charcoal); padding:0; display:flex; flex-direction:column; z-index:10; }
+  .sidebar-logo { padding:20px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
+  .sidebar-logo .brand { font-size:16px; font-weight:800; color:var(--orange); }
+  .sidebar-logo .sub { font-size:11px; color:rgba(255,255,255,.4); margin-top:2px; }
+  .sidebar nav { flex:1; padding:12px 8px; overflow-y:auto; }
+  .nav-item { display:flex; align-items:center; gap:10px; padding:10px 12px; border-radius:8px; cursor:pointer; color:rgba(255,255,255,.6); font-size:13px; font-weight:500; transition:all .2s; margin-bottom:2px; border:none; background:none; width:100%; text-align:left; }
+  .nav-item:hover { background:rgba(255,255,255,.08); color:white; }
+  .nav-item.active { background:var(--orange); color:white; }
+  .nav-item svg { flex-shrink:0; opacity:.8; }
+  .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); }
+  .sidebar-footer a { color:rgba(255,255,255,.5); font-size:12px; text-decoration:none; }
+  .sidebar-footer a:hover { color:var(--orange-light); }
+
+  .main { margin-left:220px; padding:28px; min-height:100vh; }
+  .page { display:none; }
+  .page.active { display:block; }
+
+  .page-title { font-size:22px; font-weight:800; margin-bottom:4px; }
+  .page-sub { color:var(--gray); font-size:13px; margin-bottom:24px; }
+
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:16px; margin-bottom:28px; }
+  .stat-card { background:white; border-radius:12px; padding:18px 20px; box-shadow:0 1px 4px rgba(0,0,0,.07); }
+  .stat-label { font-size:11px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:var(--gray); margin-bottom:8px; }
+  .stat-value { font-size:26px; font-weight:800; color:var(--charcoal); }
+  .stat-value.orange { color:var(--orange); }
+  .stat-value.green  { color:var(--green); }
+  .stat-value.blue   { color:var(--blue); }
+
+  .card { background:white; border-radius:12px; padding:20px; box-shadow:0 1px 4px rgba(0,0,0,.07); margin-bottom:20px; }
+  .card-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:10px; }
+  .card-title { font-size:15px; font-weight:700; }
+  .btn { border:none; border-radius:8px; padding:8px 16px; font-size:13px; font-weight:600; cursor:pointer; transition:background .2s; }
+  .btn-orange { background:var(--orange); color:white; }
+  .btn-orange:hover { background:var(--orange-light); }
+  .btn-sm { padding:5px 11px; font-size:12px; }
+  .btn-ghost { background:var(--gray-light); color:var(--charcoal); }
+  .btn-ghost:hover { background:#d8d3cc; }
+  .btn-danger { background:var(--red-bg); color:var(--red); }
+  .btn-danger:hover { background:#f9c9c9; }
+  .btn-green { background:var(--green-bg); color:var(--green); }
+  .btn-green:hover { background:#d3eee0; }
+
+  .filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
+  .filter-pill { background:var(--gray-light); color:var(--charcoal); border:none; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .filter-pill.active,.filter-pill:hover { background:var(--orange); color:white; }
+
+  table { width:100%; border-collapse:collapse; font-size:13px; }
+  th { text-align:left; padding:10px 12px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--gray); border-bottom:2px solid var(--gray-light); background:#fafaf8; }
+  td { padding:12px; border-bottom:1px solid #f0ede8; vertical-align:top; }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:#fafaf8; }
+
+  .badge { display:inline-block; padding:3px 10px; border-radius:20px; font-size:11px; font-weight:700; }
+  .badge-pending   { background:#fff3cd; color:#856404; }
+  .badge-shipped   { background:var(--blue-bg); color:var(--blue); }
+  .badge-delivered { background:var(--green-bg); color:var(--green); }
+  .badge-cancelled { background:var(--red-bg); color:var(--red); }
+
+  .form-grid { display:grid; grid-template-columns:1fr 1fr; gap:14px; }
+  .form-group { display:flex; flex-direction:column; gap:5px; }
+  .form-group label { font-size:12px; font-weight:600; color:var(--charcoal); }
+  .form-group input, .form-group select, .form-group textarea { padding:9px 11px; border:1.5px solid var(--gray-light); border-radius:8px; font-size:13px; font-family:inherit; outline:none; transition:border-color .2s; }
+  .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--orange); }
+  .form-group.full { grid-column:1/-1; }
+  .form-actions { grid-column:1/-1; display:flex; gap:10px; margin-top:6px; }
+
+  .empty-state { text-align:center; padding:48px 20px; color:var(--gray); }
+  .empty-state .icon { font-size:40px; margin-bottom:12px; }
+
+  select.status-select { padding:4px 8px; border:1.5px solid var(--gray-light); border-radius:6px; font-size:12px; cursor:pointer; outline:none; }
+
+  .product-thumb { width:44px; height:44px; border-radius:6px; object-fit:cover; background:var(--gray-light); }
+
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; }
+  .toast.show { opacity:1; }
+
+  @media (max-width:900px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .form-grid { grid-template-columns:1fr; } }
+  @media (max-width:700px) {
+    .sidebar { display:none; } .main { margin-left:0; padding:16px; }
+    .stats-grid { grid-template-columns:1fr 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="sidebar">
+  <div class="sidebar-logo">
+    <div class="brand">Jossy Sagide</div>
+    <div class="sub">Admin Panel</div>
+  </div>
+  <nav>
+    <button class="nav-item active" onclick="showPage('dashboard',this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      Dashboard
+    </button>
+    <button class="nav-item" onclick="showPage('orders',this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+      Orders
+    </button>
+    <button class="nav-item" onclick="showPage('products',this)">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      Products
+    </button>
+  </nav>
+  <div class="sidebar-footer"><a href="/">← Back to Shop</a></div>
+</div>
+
+<div class="main">
+
+  <!-- DASHBOARD -->
+  <div class="page active" id="page-dashboard">
+    <div class="page-title">Dashboard</div>
+    <div class="page-sub">Overview of your store performance</div>
+    <div class="stats-grid" id="stats-grid">
+      <div class="stat-card"><div class="stat-label">Total Orders</div><div class="stat-value orange" id="stat-orders">—</div></div>
+      <div class="stat-card"><div class="stat-label">Revenue (KSh)</div><div class="stat-value green" id="stat-revenue">—</div></div>
+      <div class="stat-card"><div class="stat-label">Products</div><div class="stat-value blue" id="stat-products">—</div></div>
+      <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value orange" id="stat-pending">—</div></div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
+      <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+      <tbody id="recent-orders-body"></tbody></table>
+    </div>
+  </div>
+
+  <!-- ORDERS -->
+  <div class="page" id="page-orders">
+    <div class="page-title">Orders</div>
+    <div class="page-sub">Manage and update customer orders</div>
+    <div class="card">
+      <div class="filter-row" id="order-filters">
+        <button class="filter-pill active" onclick="filterOrders('',this)">All</button>
+        <button class="filter-pill" onclick="filterOrders('Pending',this)">Pending</button>
+        <button class="filter-pill" onclick="filterOrders('Shipped',this)">Shipped</button>
+        <button class="filter-pill" onclick="filterOrders('Delivered',this)">Delivered</button>
+        <button class="filter-pill" onclick="filterOrders('Cancelled',this)">Cancelled</button>
+      </div>
+      <table>
+        <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="orders-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="page" id="page-products">
+    <div class="page-title">Products</div>
+    <div class="page-sub">Manage your product catalogue</div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">Add New Product</div></div>
+      <div class="form-grid" id="add-product-form">
+        <div class="form-group"><label>Product Name *</label><input type="text" id="p-name" placeholder="e.g. Classic Polo Shirt"></div>
+        <div class="form-group"><label>Price (KSh) *</label><input type="number" id="p-price" placeholder="e.g. 1200"></div>
+        <div class="form-group"><label>Category *</label>
+          <select id="p-category"><option value="Men">Men</option><option value="Women">Women</option><option value="Kids">Kids</option></select>
+        </div>
+        <div class="form-group"><label>Badge (optional)</label><input type="text" id="p-badge" placeholder="e.g. New, Popular, Sale"></div>
+        <div class="form-group"><label>Stock</label><input type="number" id="p-stock" placeholder="e.g. 50"></div>
+        <div class="form-group"><label>Sizes (comma-separated)</label><input type="text" id="p-sizes" placeholder="S, M, L, XL" value="S,M,L,XL"></div>
+        <div class="form-group full"><label>Image URL</label><input type="url" id="p-img" placeholder="https://images.unsplash.com/..."></div>
+        <div class="form-actions"><button class="btn btn-orange" onclick="addProduct()">Add Product</button><button class="btn btn-ghost" onclick="clearProductForm()">Clear</button></div>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-header"><div class="card-title">All Products</div><button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button></div>
+      <table>
+        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
+        <tbody id="products-body"></tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = '';
+
+function showPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.getElementById('page-' + id).classList.add('active');
+  if (btn) btn.classList.add('active');
+  if (id === 'dashboard') loadDashboard();
+  if (id === 'orders')    loadOrders();
+  if (id === 'products')  loadProducts();
+}
+
+function showToast(msg, ok) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.style.background = ok === false ? '#c0392b' : '#2b2b2b';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function badgeClass(status) {
+  const map = { Pending:'badge-pending', Shipped:'badge-shipped', Delivered:'badge-delivered', Cancelled:'badge-cancelled' };
+  return map[status] || 'badge-pending';
+}
+
+function fmtDate(iso) {
+  return new Date(iso).toLocaleString('en-KE', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+}
+
+// ── Dashboard ─────────────────────────────────────────────────────────────
+async function loadDashboard() {
+  try {
+    const [statsRes, ordersRes] = await Promise.all([fetch(`${API}/api/stats`), fetch(`${API}/api/orders`)]);
+    const stats  = await statsRes.json();
+    const orders = await ordersRes.json();
+    document.getElementById('stat-orders').textContent   = stats.totalOrders;
+    document.getElementById('stat-revenue').textContent  = 'KSh ' + stats.totalRevenue.toLocaleString('en-KE');
+    document.getElementById('stat-products').textContent = stats.totalProducts;
+    document.getElementById('stat-pending').textContent  = stats.pending;
+    const body = document.getElementById('recent-orders-body');
+    const recent = orders.slice(0, 8);
+    if (!recent.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px">No orders yet</td></tr>'; return; }
+    body.innerHTML = recent.map(o => `<tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--orange)">${o.id}</td>
+      <td><strong>${o.name}</strong><br><span style="color:#888;font-size:11px">${o.phone}</span></td>
+      <td><strong>KSh ${o.total.toLocaleString('en-KE')}</strong></td>
+      <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
+      <td style="color:#888;font-size:11px">${fmtDate(o.createdAt)}</td>
+    </tr>`).join('');
+  } catch (e) { showToast('Failed to load dashboard', false); }
+}
+
+// ── Orders ────────────────────────────────────────────────────────────────
+let allOrders = [];
+
+async function loadOrders(statusFilter) {
+  try {
+    const res = await fetch(`${API}/api/orders`);
+    allOrders = await res.json();
+    renderOrders(statusFilter || '');
+  } catch (e) { showToast('Failed to load orders', false); }
+}
+
+function filterOrders(status, btn) {
+  document.querySelectorAll('#order-filters .filter-pill').forEach(b => b.classList.remove('active'));
+  if (btn) btn.classList.add('active');
+  renderOrders(status);
+}
+
+function renderOrders(status) {
+  const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+  const body = document.getElementById('orders-body');
+  if (!filtered.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">No orders</td></tr>'; return; }
+  body.innerHTML = filtered.map(o => `<tr>
+    <td style="font-family:monospace;font-size:11px;color:var(--orange)">${o.id}</td>
+    <td><strong>${o.name}</strong><br><span style="color:#888;font-size:11px">${o.address}</span></td>
+    <td><a href="tel:${o.phone}" style="color:var(--blue)">${o.phone}</a></td>
+    <td>${o.items.map(i => `${i.name} ×${i.qty} (${i.size})`).join('<br>')}</td>
+    <td><strong>KSh ${o.total.toLocaleString('en-KE')}</strong></td>
+    <td>
+      <select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">
+        ${['Pending','Shipped','Delivered','Cancelled'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
+      </select>
+    </td>
+    <td style="color:#888;font-size:11px;white-space:nowrap">${fmtDate(o.createdAt)}</td>
+  </tr>`).join('');
+}
+
+async function updateOrderStatus(id, status) {
+  try {
+    const res = await fetch(`${API}/api/orders/${encodeURIComponent(id)}`, {
+      method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ status })
+    });
+    if (res.ok) { showToast(`Order updated to "${status}"`); loadOrders(); } 
+    else showToast('Failed to update order', false);
+  } catch (e) { showToast('Network error', false); }
+}
+
+//  Products 
+async function loadProducts() {
+  try {
+    const res  = await fetch(`${API}/api/products`);
+    const products = await res.json();
+    const body = document.getElementById('products-body');
+    if (!products.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">No products</td></tr>'; return; }
+    body.innerHTML = products.map(p => `<tr>
+      <td><img class="product-thumb" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'"></td>
+      <td><strong>${p.name}</strong>${p.badge ? ` <span style="font-size:10px;background:var(--orange-pale);color:var(--orange);padding:1px 6px;border-radius:4px">${p.badge}</span>` : ''}</td>
+      <td>${p.category}</td>
+      <td><strong>KSh ${p.price.toLocaleString('en-KE')}</strong></td>
+      <td>${p.stock ?? '—'}</td>
+      <td>${p.sizes.join(', ')}</td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')">Delete</button></td>
+    </tr>`).join('');
+  } catch (e) { showToast('Failed to load products', false); }
+}
+
+async function addProduct() {
+  const name     = document.getElementById('p-name').value.trim();
+  const price    = parseInt(document.getElementById('p-price').value, 10);
+  const category = document.getElementById('p-category').value;
+  const badge    = document.getElementById('p-badge').value.trim() || null;
+  const stock    = parseInt(document.getElementById('p-stock').value, 10) || 0;
+  const sizes    = document.getElementById('p-sizes').value.split(',').map(s => s.trim()).filter(Boolean);
+  const img      = document.getElementById('p-img').value.trim();
+  if (!name || !price) { showToast('Name and price are required', false); return; }
+  try {
+    const res = await fetch(`${API}/api/products`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({ name, price, category, badge, stock, sizes, img })
+    });
+    if (res.ok) { showToast('Product added!'); clearProductForm(); loadProducts(); }
+    else showToast('Failed to add product', false);
+  } catch (e) { showToast('Network error', false); }
+}
+
+function clearProductForm() {
+  ['p-name','p-price','p-badge','p-stock','p-img'].forEach(id => document.getElementById(id).value = '');
+  document.getElementById('p-sizes').value = 'S,M,L,XL';
+  document.getElementById('p-category').value = 'Men';
+}
+
+async function deleteProduct(id, name) {
+  if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+  try {
+    const res = await fetch(`${API}/api/products/${id}`, { method:'DELETE' });
+    if (res.ok) { showToast('Product deleted'); loadProducts(); }
+    else showToast('Failed to delete', false);
+  } catch (e) { showToast('Network error', false); }
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────
+loadDashboard();
+</script>
+</body>
+</html>

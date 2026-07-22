@@ -1,0 +1,21 @@
+[
+  {
+    "id": "JS-1784745728795",
+    "name": "jamlick sagide",
+    "phone": "0799044907",
+    "address": "mbale town",
+    "county": "vihiga",
+    "items": [
+      {
+        "name": "Casual Sneakers",
+        "size": "38",
+        "qty": 1,
+        "price": 3200
+      }
+    ],
+    "total": 3200,
+    "status": "Pending",
+    "notes": "",
+    "createdAt": "2026-07-22T18:42:08.795Z"
+  }
+]

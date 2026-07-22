@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JOSSY SAGIDE — Quality Clothing for the Whole Family</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  :root {
+    --orange: #e85d2f; --orange-light: #f07a52; --orange-pale: #fdf0ea;
+    --cream: #fdfaf5; --cream-dark: #f5f0e8; --charcoal: #2b2b2b;
+    --charcoal-light: #555; --gray: #888; --gray-light: #e8e3dc;
+    --blue: #3a6fa8; --blue-light: #eaf0f9; --coral: #e07070;
+    --coral-light: #fdf0f0; --green: #4a9a6a; --green-light: #edf7f2;
+    --white: #ffffff; --shadow: 0 2px 12px rgba(0,0,0,0.08);
+    --shadow-hover: 0 6px 24px rgba(0,0,0,0.14); --radius: 12px; --radius-sm: 8px;
+  }
+  html { scroll-behavior: smooth; }
+  body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:var(--cream); color:var(--charcoal); line-height:1.6; font-size:15px; }
+
+  .topbar { background:var(--charcoal); color:var(--cream); text-align:center; padding:8px 16px; font-size:13px; letter-spacing:.02em; }
+  .topbar a { color:var(--orange-light); text-decoration:none; }
+
+  header { background:var(--white); border-bottom:2px solid var(--gray-light); position:sticky; top:0; z-index:100; }
+  .header-inner { max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
+  .logo { display:flex; flex-direction:column; line-height:1; text-decoration:none; }
+  .logo-name { font-size:24px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
+  .logo-sub { font-size:10px; color:var(--gray); letter-spacing:.06em; text-transform:uppercase; font-weight:500; }
+
+  nav { display:flex; align-items:center; gap:4px; }
+  nav a { text-decoration:none; color:var(--charcoal); font-weight:500; font-size:14px; padding:6px 12px; border-radius:20px; transition:background .2s,color .2s; }
+  nav a:hover { background:var(--orange-pale); color:var(--orange); }
+  nav a.sale { color:var(--orange); font-weight:700; }
+
+  .header-actions { display:flex; align-items:center; gap:10px; }
+  .cart-btn { background:var(--orange); color:white; border:none; border-radius:24px; padding:8px 16px; cursor:pointer; display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; transition:background .2s,transform .1s; }
+  .cart-btn:hover { background:var(--orange-light); transform:translateY(-1px); }
+  .cart-count { background:var(--charcoal); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:transform .3s; }
+  .cart-count.bump { transform:scale(1.4); }
+
+  .hamburger { display:none; background:none; border:1.5px solid var(--gray-light); border-radius:8px; padding:7px 9px; cursor:pointer; flex-direction:column; gap:4px; }
+  .hamburger span { display:block; width:20px; height:2px; background:var(--charcoal); border-radius:2px; transition:all .3s; }
+  .mobile-nav { display:none; background:var(--white); border-top:1px solid var(--gray-light); padding:12px 20px 16px; flex-direction:column; gap:4px; }
+  .mobile-nav a { display:block; padding:10px 12px; text-decoration:none; color:var(--charcoal); font-weight:500; border-radius:8px; transition:background .2s; }
+  .mobile-nav a:hover { background:var(--orange-pale); color:var(--orange); }
+  .mobile-nav a.sale { color:var(--orange); font-weight:700; }
+  .mobile-nav.open { display:flex; }
+
+  .hero { background:linear-gradient(135deg,#e85d2f 0%,#f07a52 35%,#f5b98e 65%,#fdfaf5 100%); padding:70px 20px 60px; text-align:center; position:relative; overflow:hidden; }
+  .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 30%,rgba(255,255,255,.18) 0%,transparent 60%); }
+  .hero-inner { position:relative; max-width:680px; margin:0 auto; }
+  .hero-tag { display:inline-block; background:rgba(255,255,255,.3); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,.5); color:white; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
+  .hero h1 { font-size:clamp(32px,6vw,52px); font-weight:900; color:white; line-height:1.1; margin-bottom:16px; letter-spacing:-1px; text-shadow:0 2px 12px rgba(0,0,0,.12); }
+  .hero p { font-size:clamp(15px,2.5vw,18px); color:rgba(255,255,255,.92); margin-bottom:30px; max-width:480px; margin-left:auto; margin-right:auto; }
+  .hero-btns { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+  .btn-primary { background:white; color:var(--orange); border:none; padding:14px 28px; border-radius:30px; font-size:15px; font-weight:700; cursor:pointer; text-decoration:none; display:inline-block; box-shadow:0 4px 16px rgba(0,0,0,.15); transition:transform .2s,box-shadow .2s; }
+  .btn-primary:hover { transform:translateY(-2px); box-shadow:0 8px 24px rgba(0,0,0,.2); }
+  .btn-secondary { background:transparent; color:white; border:2px solid rgba(255,255,255,.7); padding:14px 28px; border-radius:30px; font-size:15px; font-weight:600; cursor:pointer; text-decoration:none; display:inline-block; transition:background .2s,border-color .2s; }
+  .btn-secondary:hover { background:rgba(255,255,255,.15); border-color:white; }
+
+  section { padding:56px 20px; }
+  .section-inner { max-width:1200px; margin:0 auto; }
+  .section-title { font-size:clamp(22px,4vw,30px); font-weight:800; color:var(--charcoal); margin-bottom:6px; letter-spacing:-0.5px; }
+  .section-subtitle { color:var(--charcoal-light); margin-bottom:36px; font-size:15px; }
+  .title-accent { display:inline-block; width:36px; height:4px; background:var(--orange); border-radius:2px; margin-bottom:10px; }
+
+  #categories { background:var(--cream-dark); }
+  .categories-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .cat-card { background:white; border-radius:var(--radius); padding:32px 24px; text-align:center; text-decoration:none; transition:transform .2s,box-shadow .2s; box-shadow:var(--shadow); border-top:4px solid transparent; }
+  .cat-card:hover { transform:translateY(-4px); box-shadow:var(--shadow-hover); }
+  .cat-card.men { border-top-color:var(--blue); background:var(--blue-light); }
+  .cat-card.women { border-top-color:var(--coral); background:var(--coral-light); }
+  .cat-card.kids { border-top-color:var(--green); background:var(--green-light); }
+  .cat-icon { width:64px; height:64px; border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; font-size:28px; }
+  .men .cat-icon { background:var(--blue); }
+  .women .cat-icon { background:var(--coral); }
+  .kids .cat-icon { background:var(--green); }
+  .cat-card h3 { font-size:18px; font-weight:800; margin-bottom:8px; letter-spacing:.05em; text-transform:uppercase; }
+  .men h3 { color:var(--blue); } .women h3 { color:var(--coral); } .kids h3 { color:var(--green); }
+  .cat-card p { font-size:13px; color:var(--charcoal-light); margin-bottom:16px; line-height:1.5; }
+  .cat-link { font-size:13px; font-weight:700; text-decoration:none; letter-spacing:.03em; }
+  .men .cat-link { color:var(--blue); } .women .cat-link { color:var(--coral); } .kids .cat-link { color:var(--green); }
+
+  .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:28px; }
+  .filter-btn { background:white; border:1.5px solid var(--gray-light); color:var(--charcoal); padding:7px 18px; border-radius:20px; font-size:13px; font-weight:600; cursor:pointer; transition:all .2s; }
+  .filter-btn:hover,.filter-btn.active { background:var(--orange); border-color:var(--orange); color:white; }
+
+  #products { background:var(--cream); }
+  .products-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:22px; }
+  .product-card { background:white; border-radius:var(--radius); overflow:hidden; box-shadow:var(--shadow); transition:transform .2s,box-shadow .2s; display:flex; flex-direction:column; }
+  .product-card:hover { transform:translateY(-3px); box-shadow:var(--shadow-hover); }
+  .product-img-wrap { position:relative; padding-top:72%; overflow:hidden; background:var(--gray-light); }
+  .product-img-wrap img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; transition:transform .4s; }
+  .product-card:hover .product-img-wrap img { transform:scale(1.05); }
+  .product-badge { position:absolute; top:10px; left:10px; background:var(--orange); color:white; font-size:10px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; padding:3px 8px; border-radius:4px; }
+  .product-body { padding:16px; flex:1; display:flex; flex-direction:column; gap:10px; }
+  .product-name { font-size:14px; font-weight:700; color:var(--charcoal); line-height:1.3; }
+  .product-price { font-size:18px; font-weight:800; color:var(--orange); }
+  .size-label { font-size:11px; font-weight:600; color:var(--gray); text-transform:uppercase; letter-spacing:.05em; }
+  .sizes { display:flex; flex-wrap:wrap; gap:6px; }
+  .size-pill { border:1.5px solid var(--gray-light); background:white; color:var(--charcoal); font-size:12px; font-weight:600; padding:4px 9px; border-radius:20px; cursor:pointer; transition:all .15s; user-select:none; }
+  .size-pill:hover { border-color:var(--orange); color:var(--orange); }
+  .size-pill.selected { background:var(--orange); border-color:var(--orange); color:white; }
+  .add-to-cart { background:var(--orange); color:white; border:none; border-radius:8px; padding:11px 16px; font-size:13px; font-weight:700; cursor:pointer; width:100%; transition:background .2s,transform .1s; margin-top:auto; }
+  .add-to-cart:hover { background:var(--orange-light); }
+  .add-to-cart:active { transform:scale(.97); }
+  .add-to-cart.added { background:var(--green); }
+  .size-warning { font-size:11px; color:#c0392b; font-weight:500; min-height:14px; }
+  .loading-grid { text-align:center; padding:48px; color:var(--gray); font-size:15px; }
+
+  #why { background:var(--charcoal); }
+  #why .section-title { color:white; } #why .section-subtitle { color:rgba(255,255,255,.6); } #why .title-accent { background:var(--orange-light); }
+  .why-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:24px; }
+  .why-card { background:rgba(255,255,255,.06); border:1px solid rgba(255,255,255,.1); border-radius:var(--radius); padding:32px 24px; text-align:center; transition:background .2s; }
+  .why-card:hover { background:rgba(255,255,255,.1); }
+  .why-icon { width:60px; height:60px; background:var(--orange); border-radius:50%; display:flex; align-items:center; justify-content:center; margin:0 auto 16px; }
+  .why-card h3 { color:white; font-size:16px; font-weight:700; margin-bottom:8px; }
+  .why-card p { color:rgba(255,255,255,.65); font-size:13.5px; line-height:1.6; }
+
+  #testimonials { background:var(--orange-pale); }
+  .reviews-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:20px; }
+  .review-card { background:white; border-radius:var(--radius); padding:24px; box-shadow:var(--shadow); position:relative; }
+  .review-card::before { content:'"'; position:absolute; top:12px; left:18px; font-size:60px; color:var(--orange); opacity:.15; font-family:Georgia,serif; line-height:1; }
+  .stars { color:#f59e0b; font-size:15px; margin-bottom:10px; letter-spacing:2px; }
+  .review-text { font-size:14px; color:var(--charcoal-light); line-height:1.6; margin-bottom:16px; }
+  .reviewer { display:flex; align-items:center; gap:10px; }
+  .reviewer-avatar { width:38px; height:38px; border-radius:50%; background:linear-gradient(135deg,var(--orange),#f5b98e); display:flex; align-items:center; justify-content:center; font-size:14px; font-weight:700; color:white; }
+  .reviewer-name { font-size:13px; font-weight:700; color:var(--charcoal); }
+  .reviewer-loc { font-size:12px; color:var(--gray); }
+
+  footer { background:#1e1e1e; color:rgba(255,255,255,.7); padding:48px 20px 24px; }
+  .footer-inner { max-width:1200px; margin:0 auto; }
+  .footer-grid { display:grid; grid-template-columns:2fr 1fr 1fr 1.5fr; gap:40px; margin-bottom:36px; }
+  .footer-brand .logo-name { font-size:22px; font-weight:800; color:var(--orange); }
+  .footer-tagline { font-size:13px; margin:8px 0 16px; line-height:1.5; }
+  .footer-social { display:flex; gap:10px; }
+  .social-btn { width:34px; height:34px; border-radius:8px; background:rgba(255,255,255,.08); display:flex; align-items:center; justify-content:center; cursor:pointer; transition:background .2s; text-decoration:none; }
+  .social-btn:hover { background:var(--orange); }
+  .footer-col h4 { color:white; font-size:13px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; margin-bottom:14px; }
+  .footer-col ul { list-style:none; }
+  .footer-col ul li { margin-bottom:8px; }
+  .footer-col ul li a { color:rgba(255,255,255,.6); text-decoration:none; font-size:13px; transition:color .2s; }
+  .footer-col ul li a:hover { color:var(--orange-light); }
+  .contact-item { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; font-size:13px; }
+  .contact-item svg { flex-shrink:0; margin-top:2px; opacity:.6; }
+  .footer-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; color:rgba(255,255,255,.4); }
+  .mpesa-badge { background:#00a550; color:white; font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; letter-spacing:.04em; }
+
+  /* Cart Sidebar */
+  .cart-overlay { position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:200; opacity:0; pointer-events:none; transition:opacity .3s; }
+  .cart-overlay.open { opacity:1; pointer-events:all; }
+  .cart-sidebar { position:fixed; top:0; right:0; width:min(400px,100vw); height:100dvh; background:white; z-index:201; display:flex; flex-direction:column; transform:translateX(100%); transition:transform .35s cubic-bezier(.4,0,.2,1); box-shadow:-4px 0 30px rgba(0,0,0,.15); }
+  .cart-sidebar.open { transform:translateX(0); }
+  .cart-header { padding:20px; border-bottom:1px solid var(--gray-light); display:flex; justify-content:space-between; align-items:center; }
+  .cart-header h2 { font-size:18px; font-weight:800; }
+  .cart-close { background:var(--gray-light); border:none; border-radius:8px; width:34px; height:34px; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background .2s; }
+  .cart-close:hover { background:var(--orange-pale); }
+  .cart-items { flex:1; overflow-y:auto; padding:16px; }
+  .empty-cart { text-align:center; padding:48px 20px; color:var(--gray); }
+  .empty-cart svg { opacity:.3; margin-bottom:12px; }
+  .cart-item { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--gray-light); align-items:flex-start; }
+  .cart-item-img { width:64px; height:64px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--gray-light); }
+  .cart-item-details { flex:1; }
+  .cart-item-name { font-size:13px; font-weight:600; margin-bottom:3px; line-height:1.3; }
+  .cart-item-meta { font-size:12px; color:var(--gray); margin-bottom:8px; }
+  .cart-item-price { font-size:14px; font-weight:700; color:var(--orange); }
+  .qty-controls { display:flex; align-items:center; gap:8px; margin-top:6px; }
+  .qty-btn { background:var(--gray-light); border:none; border-radius:6px; width:26px; height:26px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; transition:background .15s; font-weight:700; color:var(--charcoal); }
+  .qty-btn:hover { background:var(--orange-pale); color:var(--orange); }
+  .qty-num { font-size:14px; font-weight:700; min-width:20px; text-align:center; }
+  .remove-btn { background:none; border:none; cursor:pointer; color:var(--gray); padding:4px; border-radius:6px; transition:color .2s; display:flex; align-items:center; }
+  .remove-btn:hover { color:#c0392b; }
+  .cart-footer { padding:16px 20px 20px; border-top:2px solid var(--gray-light); }
+  .cart-total-row { display:flex; justify-content:space-between; font-size:16px; font-weight:800; margin-bottom:14px; }
+  .cart-total-price { color:var(--orange); }
+  .checkout-btn { width:100%; background:var(--orange); color:white; border:none; border-radius:10px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; transition:background .2s; }
+  .checkout-btn:hover { background:var(--orange-light); }
+  .checkout-note { font-size:12px; color:var(--gray); text-align:center; margin-top:10px; }
+
+  /* Checkout Modal */
+  .modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,.5); z-index:300; display:none; align-items:center; justify-content:center; padding:20px; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:white; border-radius:16px; padding:28px; width:100%; max-width:480px; max-height:90vh; overflow-y:auto; position:relative; }
+  .modal-close { position:absolute; top:16px; right:16px; background:var(--gray-light); border:none; border-radius:8px; width:32px; height:32px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+  .modal-box h2 { font-size:20px; font-weight:800; margin-bottom:6px; }
+  .modal-box p.sub { font-size:13px; color:var(--gray); margin-bottom:20px; }
+  .form-group { margin-bottom:14px; }
+  .form-group label { display:block; font-size:13px; font-weight:600; margin-bottom:5px; color:var(--charcoal); }
+  .form-group input, .form-group textarea, .form-group select { width:100%; padding:10px 12px; border:1.5px solid var(--gray-light); border-radius:8px; font-size:14px; font-family:inherit; transition:border-color .2s; outline:none; }
+  .form-group input:focus, .form-group textarea:focus, .form-group select:focus { border-color:var(--orange); }
+  .form-group textarea { height:70px; resize:vertical; }
+  .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .order-summary { background:var(--orange-pale); border-radius:10px; padding:14px; margin-bottom:18px; }
+  .order-summary h4 { font-size:13px; font-weight:700; margin-bottom:10px; color:var(--charcoal); }
+  .order-line { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+  .order-line.total { font-weight:800; font-size:15px; color:var(--orange); border-top:1px solid rgba(0,0,0,.1); padding-top:8px; margin-top:4px; }
+  .place-order-btn { width:100%; background:var(--orange); color:white; border:none; border-radius:10px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; transition:background .2s; }
+  .place-order-btn:hover { background:var(--orange-light); }
+  .place-order-btn:disabled { background:var(--gray); cursor:not-allowed; }
+  .success-screen { text-align:center; padding:20px 0; }
+  .success-icon { font-size:56px; margin-bottom:16px; }
+  .success-screen h3 { font-size:22px; font-weight:800; color:var(--charcoal); margin-bottom:8px; }
+  .success-screen p { color:var(--charcoal-light); font-size:14px; line-height:1.6; margin-bottom:6px; }
+  .order-id-badge { display:inline-block; background:var(--orange-pale); color:var(--orange); font-weight:700; padding:6px 16px; border-radius:20px; font-size:13px; margin-top:12px; }
+
+  /* Toast */
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; }
+  .toast.show { opacity:1; }
+
+  @media (max-width:900px) {
+    .products-grid { grid-template-columns:repeat(2,1fr); }
+    .footer-grid { grid-template-columns:1fr 1fr; }
+  }
+  @media (max-width:700px) {
+    nav { display:none; } .hamburger { display:flex; }
+    .categories-grid { grid-template-columns:1fr; gap:14px; }
+    .cat-card { padding:22px 18px; text-align:left; display:flex; align-items:flex-start; gap:16px; }
+    .cat-icon { margin:0; flex-shrink:0; width:52px; height:52px; font-size:22px; }
+    .why-grid { grid-template-columns:1fr; gap:14px; }
+    .reviews-grid { grid-template-columns:1fr; }
+    .footer-grid { grid-template-columns:1fr; gap:28px; }
+    .footer-bottom { flex-direction:column; text-align:center; }
+    .form-row { grid-template-columns:1fr; }
+  }
+  @media (max-width:600px) { .products-grid { grid-template-columns:1fr; } .hero { padding:50px 20px 44px; } section { padding:44px 16px; } }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <a href="tel:+254726576044">+254 726 576 044</a>
+  &nbsp;&middot;&nbsp; Free delivery in Mbale and orders above KSh 5,000
+</div>
+
+<header>
+  <div class="header-inner">
+    <a href="#" class="logo">
+      <span class="logo-name">Jossy Sagide</span>
+      <span class="logo-sub">Mbale's Favourite Family Store</span>
+    </a>
+    <nav id="main-nav">
+      <a href="#" onclick="filterProducts('Men');return false">Men</a>
+      <a href="#" onclick="filterProducts('Women');return false">Women</a>
+      <a href="#" onclick="filterProducts('Kids');return false">Kids</a>
+      <a href="#products" class="sale">Sale</a>
+      <a href="#footer">Contact</a>
+    </nav>
+    <div class="header-actions">
+      <button class="cart-btn" id="cart-toggle">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg>
+        Cart <span class="cart-count" id="cart-count">0</span>
+      </button>
+      <button class="hamburger" id="hamburger"><span></span><span></span><span></span></button>
+    </div>
+  </div>
+  <nav class="mobile-nav" id="mobile-nav">
+    <a href="#" onclick="filterProducts('Men');mobileNav.classList.remove('open');return false">Men</a>
+    <a href="#" onclick="filterProducts('Women');mobileNav.classList.remove('open');return false">Women</a>
+    <a href="#" onclick="filterProducts('Kids');mobileNav.classList.remove('open');return false">Kids</a>
+    <a href="#products" class="sale">Sale</a>
+    <a href="#footer">Contact</a>
+  </nav>
+</header>
+
+<section class="hero" id="home">
+  <div class="hero-inner">
+    <span class="hero-tag">MBALE'S FAVOURITE FAMILY STORE</span>
+    <h1>Dress the Whole Family</h1>
+    <p>Affordable, quality clothing for men, women &amp; kids — delivered across Kenya</p>
+    <div class="hero-btns">
+      <a href="#products" class="btn-primary">Shop Now</a>
+      <a href="#categories" class="btn-secondary">Browse Categories</a>
+    </div>
+  </div>
+</section>
+
+<section id="categories">
+  <div class="section-inner">
+    <div class="title-accent"></div>
+    <h2 class="section-title">Shop by Category</h2>
+    <p class="section-subtitle">Everything the family needs, all in one place</p>
+    <div class="categories-grid">
+      <a class="cat-card men" href="#products" onclick="filterProducts('Men')">
+        <div class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/></svg></div>
+        <div><h3>Men</h3><p>Casual shirts, trousers, hoodies &amp; more for everyday comfort</p><span class="cat-link">Shop Men &rarr;</span></div>
+      </a>
+      <a class="cat-card women" href="#products" onclick="filterProducts('Women')">
+        <div class="cat-icon"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="5" r="3"/><path d="M6 21v-2a4 4 0 0 1 4-4h4a4 4 0 0 1 4 4v2"/><line x1="12" y1="19" x2="12" y2="22"/><line x1="9" y1="22" x2="15" y2="22"/></svg></div>
+        <div><h3>Women</h3><p>Dresses, jeans, blouses &amp; ankara styles you'll love every day</p><span class="cat-link">Shop Women &rarr;</span></div>
+      </a>
+      <a class="cat-card kids" href="#products" onclick="filterProducts('Kids')">
+        <div class="cat-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="4" r="2"/><path d="M9 10h6l1 5H8l1-5z"/><path d="M9 15l-1.5 6"/><path d="M15 15l1.5 6"/></svg></div>
+        <div><h3>Kids</h3><p>Fun, durable outfits for little ones from toddlers to age 8</p><span class="cat-link">Shop Kids &rarr;</span></div>
+      </a>
+    </div>
+  </div>
+</section>
+
+<section id="products">
+  <div class="section-inner">
+    <div class="title-accent"></div>
+    <h2 class="section-title">Featured Products</h2>
+    <p class="section-subtitle">Quality picks at prices that make sense for your family</p>
+    <div class="filter-bar" id="filter-bar">
+      <button class="filter-btn active" onclick="filterProducts('all',this)">All</button>
+      <button class="filter-btn" onclick="filterProducts('Men',this)">Men</button>
+      <button class="filter-btn" onclick="filterProducts('Women',this)">Women</button>
+      <button class="filter-btn" onclick="filterProducts('Kids',this)">Kids</button>
+    </div>
+    <div class="products-grid" id="products-grid">
+      <div class="loading-grid">Loading products…</div>
+    </div>
+  </div>
+</section>
+
+<section id="why">
+  <div class="section-inner">
+    <div class="title-accent"></div>
+    <h2 class="section-title">Why Jossy Sagide?</h2>
+    <p class="section-subtitle">Because your family deserves the best, at the right price</p>
+    <div class="why-grid">
+      <div class="why-card">
+        <div class="why-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg></div>
+        <h3>Affordable Prices</h3>
+        <p>Quality clothing that fits your budget. From KSh 800 — no compromises on quality or your wallet.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="1" y="3" width="15" height="13" rx="2"/><polygon points="16 8 20 8 23 11 23 16 16 16 16 8"/><circle cx="5.5" cy="18.5" r="2.5"/><circle cx="18.5" cy="18.5" r="2.5"/></svg></div>
+        <h3>Fast Delivery in Mbale</h3>
+        <p>Same-day delivery within Mbale and major areas. Free delivery on orders over KSh 5,000.</p>
+      </div>
+      <div class="why-card">
+        <div class="why-icon"><svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg></div>
+        <h3>M-Pesa Accepted</h3>
+        <p>Pay easily via M-Pesa Paybill, buy goods, or pay on delivery. Safe and familiar for every Kenyan shopper.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="testimonials">
+  <div class="section-inner">
+    <div class="title-accent"></div>
+    <h2 class="section-title">What Our Customers Say</h2>
+    <p class="section-subtitle">Real families, real reviews from across Mbale</p>
+    <div class="reviews-grid">
+      <div class="review-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="review-text">"Nimependa sana the kids' set! My children wore it to school and got so many compliments. The quality is really good for the price. Will order again soon!"</p>
+        <div class="reviewer"><div class="reviewer-avatar">AW</div><div><div class="reviewer-name">Aisha Wanjiku</div><div class="reviewer-loc">Mbale, Kenya</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="review-text">"The Ankara blouse is absolutely beautiful — the fabric is high quality and the fit is perfect. Delivery was fast, came the same afternoon I ordered. Jossy Sagide is the real deal!"</p>
+        <div class="reviewer"><div class="reviewer-avatar">JS</div><div><div class="reviewer-name">Jamlick Sagide</div><div class="reviewer-loc">Mbale, Kenya</div></div></div>
+      </div>
+      <div class="review-card">
+        <div class="stars">&#9733;&#9733;&#9733;&#9733;&#9733;</div>
+        <p class="review-text">"Ordered polo shirts for the whole office. Great bulk deal, M-Pesa was super convenient. These guys are doing a great job — affordable and honest. Highly recommended!"</p>
+        <div class="reviewer"><div class="reviewer-avatar">CA</div><div><div class="reviewer-name">Charlene Avigoke</div><div class="reviewer-loc">Mbale, Kenya</div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer id="footer">
+  <div class="footer-inner">
+    <div class="footer-grid">
+      <div class="footer-brand">
+        <div class="logo-name">JOSSY SAGIDE</div>
+        <p class="footer-tagline">Quality clothing for the whole family.<br>Your neighbourhood clothing store in Mbale.</p>
+        <div class="footer-social">
+          <a class="social-btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg></a>
+          <a class="social-btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg></a>
+          <a class="social-btn" href="#"><svg width="16" height="16" viewBox="0 0 24 24" fill="white"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg></a>
+        </div>
+      </div>
+      <div class="footer-col"><h4>Shop</h4><ul><li><a href="#">Men's Clothing</a></li><li><a href="#">Women's Clothing</a></li><li><a href="#">Kids' Clothing</a></li><li><a href="#">Sale Items</a></li><li><a href="#">New Arrivals</a></li></ul></div>
+      <div class="footer-col"><h4>Help</h4><ul><li><a href="#">Size Guide</a></li><li><a href="#">Delivery Info</a></li><li><a href="#">Returns Policy</a></li><li><a href="#">M-Pesa Payment</a></li><li><a href="#">Track My Order</a></li></ul></div>
+      <div class="footer-col">
+        <h4>Contact Us</h4>
+        <div class="contact-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg><span>Mbale Town, Kenya</span></div>
+        <div class="contact-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.36 12"/></svg><span>+254 726 576 044</span></div>
+        <div class="contact-item"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg><a href="mailto:josephinemmbone44@gmail.com" style="color:rgba(255,255,255,.6)">josephinemmbone44@gmail.com</a></div>
+        <div style="margin-top:14px"><span class="mpesa-badge">M-PESA: 0726576044</span></div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; 2026 Jossy Sagide. All rights reserved. Mbale, Kenya.</span>
+      <span>Made with love for Kenyan families</span>
+    </div>
+  </div>
+</footer>
+
+<!-- Cart Sidebar -->
+<div class="cart-overlay" id="cart-overlay"></div>
+<div class="cart-sidebar" id="cart-sidebar">
+  <div class="cart-header">
+    <h2>Your Cart</h2>
+    <button class="cart-close" id="cart-close">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+  </div>
+  <div class="cart-items" id="cart-items"></div>
+  <div class="cart-footer" id="cart-footer" style="display:none">
+    <div class="cart-total-row"><span>Total</span><span class="cart-total-price" id="cart-total">KSh 0</span></div>
+    <button class="checkout-btn" id="checkout-open-btn">Proceed to Checkout</button>
+    <p class="checkout-note">Pay via M-Pesa or Cash on Delivery</p>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal-overlay" id="checkout-modal">
+  <div class="modal-box">
+    <button class="modal-close" id="checkout-close">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+    </button>
+    <div id="checkout-form-wrap">
+      <h2>Complete Your Order</h2>
+      <p class="sub">We'll confirm by phone and arrange M-Pesa payment or COD.</p>
+      <div id="order-summary-box" class="order-summary"></div>
+      <div class="form-row">
+        <div class="form-group"><label>Full Name *</label><input type="text" id="c-name" placeholder="e.g. Jane Wanjiku"></div>
+        <div class="form-group"><label>Phone (M-Pesa) *</label><input type="tel" id="c-phone" placeholder="07XXXXXXXX"></div>
+      </div>
+      <div class="form-group"><label>Delivery Address *</label><input type="text" id="c-address" placeholder="e.g. Mbale Town, near the market"></div>
+      <div class="form-row">
+        <div class="form-group"><label>County</label><input type="text" id="c-county" placeholder="e.g. Vihiga"></div>
+        <div class="form-group"><label>Order Notes</label><input type="text" id="c-notes" placeholder="Any special requests?"></div>
+      </div>
+      <button class="place-order-btn" id="place-order-btn">Place Order — Pay on Delivery / M-Pesa</button>
+    </div>
+    <div id="checkout-success" style="display:none" class="success-screen">
+      <div class="success-icon">✅</div>
+      <h3>Order Placed!</h3>
+      <p>Thank you! We will call you shortly to confirm delivery and collect payment via M-Pesa or cash.</p>
+      <p id="success-order-id" class="order-id-badge"></p>
+      <br>
+      <button class="btn-primary" style="margin-top:10px" onclick="closeCheckout()">Continue Shopping</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const API = ''; // same origin
+let allProducts = [];
+let cart = [];
+let selectedSizes = {};
+const mobileNav = document.getElementById('mobile-nav');
+
+// ── Fetch products from backend ────────────────────────────────────────────
+async function loadProducts(category) {
+  const url = category && category !== 'all'
+    ? `${API}/api/products?category=${encodeURIComponent(category)}`
+    : `${API}/api/products`;
+  try {
+    const res = await fetch(url);
+    allProducts = await res.json();
+    renderProducts(allProducts);
+  } catch (e) {
+    document.getElementById('products-grid').innerHTML = '<div class="loading-grid">⚠️ Could not load products. Make sure the server is running.</div>';
+  }
+}
+
+function renderProducts(products) {
+  const grid = document.getElementById('products-grid');
+  if (!products.length) { grid.innerHTML = '<div class="loading-grid">No products found.</div>'; return; }
+  grid.innerHTML = products.map(p => `
+    <div class="product-card" id="card-${p.id}">
+      <div class="product-img-wrap">
+        <img src="${p.img}" alt="${p.name}" loading="lazy" onerror="this.style.display='none'">
+        ${p.badge ? `<span class="product-badge">${p.badge}</span>` : ''}
+      </div>
+      <div class="product-body">
+        <div>
+          <span style="font-size:11px;color:var(--gray);text-transform:uppercase;letter-spacing:.05em;font-weight:600">${p.category}</span>
+          <div class="product-name">${p.name}</div>
+        </div>
+        <div class="product-price">KSh ${p.price.toLocaleString('en-KE')}</div>
+        <div>
+          <div class="size-label">Select Size</div>
+          <div class="sizes">${p.sizes.map(s => `<button class="size-pill" data-product="${p.id}" data-size="${s}" onclick="selectSize(${p.id},'${s}',this)">${s}</button>`).join('')}</div>
+        </div>
+        <div class="size-warning" id="warn-${p.id}"></div>
+        <button class="add-to-cart" onclick="addToCart(${p.id})">Add to Cart</button>
+      </div>
+    </div>`).join('');
+}
+
+function filterProducts(cat, btn) {
+  if (btn) {
+    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  }
+  loadProducts(cat === 'all' ? null : cat);
+  document.getElementById('products').scrollIntoView({ behavior: 'smooth' });
+}
+
+// ── Cart ──────────────────────────────────────────────────────────────────
+function selectSize(pid, size, btn) {
+  selectedSizes[pid] = size;
+  document.querySelectorAll(`[data-product="${pid}"]`).forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById(`warn-${pid}`).textContent = '';
+}
+
+function addToCart(pid) {
+  const size = selectedSizes[pid];
+  if (!size) { document.getElementById(`warn-${pid}`).textContent = 'Please select a size first'; return; }
+  const product = allProducts.find(p => p.id === pid);
+  if (!product) return;
+  const key = `${pid}-${size}`;
+  const ex  = cart.find(c => c.key === key);
+  if (ex) { ex.qty++; } else { cart.push({ key, id: pid, size, name: product.name, price: product.price, img: product.img, qty: 1 }); }
+  const btn = document.querySelector(`#card-${pid} .add-to-cart`);
+  const orig = btn.textContent;
+  btn.textContent = 'Added!'; btn.classList.add('added');
+  setTimeout(() => { btn.textContent = orig; btn.classList.remove('added'); }, 1200);
+  updateCartUI();
+  openCart();
+  showToast(`${product.name} added to cart!`);
+}
+
+function updateCartUI() {
+  const total = cart.reduce((s, c) => s + c.qty, 0);
+  const countEl = document.getElementById('cart-count');
+  countEl.textContent = total;
+  countEl.classList.remove('bump'); void countEl.offsetWidth; countEl.classList.add('bump');
+  setTimeout(() => countEl.classList.remove('bump'), 400);
+  renderCartItems();
+  buildOrderSummary();
+}
+
+function renderCartItems() {
+  const el     = document.getElementById('cart-items');
+  const footer = document.getElementById('cart-footer');
+  if (!cart.length) {
+    el.innerHTML = `<div class="empty-cart"><svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="21" r="1"/><circle cx="20" cy="21" r="1"/><path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"/></svg><p>Your cart is empty</p><p style="font-size:13px;margin-top:6px">Add some items to get started!</p></div>`;
+    footer.style.display = 'none'; return;
+  }
+  footer.style.display = 'block';
+  const totalAmt = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  document.getElementById('cart-total').textContent = 'KSh ' + totalAmt.toLocaleString('en-KE');
+  el.innerHTML = cart.map(item => `
+    <div class="cart-item">
+      <img class="cart-item-img" src="${item.img}" alt="${item.name}" onerror="this.style.display='none'">
+      <div class="cart-item-details">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-meta">Size: ${item.size}</div>
+        <div class="cart-item-price">KSh ${(item.price * item.qty).toLocaleString('en-KE')}</div>
+        <div class="qty-controls">
+          <button class="qty-btn" onclick="changeQty('${item.key}',-1)">−</button>
+          <span class="qty-num">${item.qty}</span>
+          <button class="qty-btn" onclick="changeQty('${item.key}',1)">+</button>
+        </div>
+      </div>
+      <button class="remove-btn" onclick="removeItem('${item.key}')"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/></svg></button>
+    </div>`).join('');
+}
+
+function changeQty(key, d) {
+  const item = cart.find(c => c.key === key);
+  if (!item) return;
+  item.qty += d;
+  if (item.qty <= 0) cart = cart.filter(c => c.key !== key);
+  updateCartUI();
+}
+
+function removeItem(key) { cart = cart.filter(c => c.key !== key); updateCartUI(); }
+
+function openCart()  { document.getElementById('cart-sidebar').classList.add('open'); document.getElementById('cart-overlay').classList.add('open'); document.body.style.overflow = 'hidden'; }
+function closeCart() { document.getElementById('cart-sidebar').classList.remove('open'); document.getElementById('cart-overlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+document.getElementById('cart-toggle').onclick = openCart;
+document.getElementById('cart-close').onclick   = closeCart;
+document.getElementById('cart-overlay').onclick = closeCart;
+document.getElementById('hamburger').onclick     = () => mobileNav.classList.toggle('open');
+
+// ── Checkout ──────────────────────────────────────────────────────────────
+function buildOrderSummary() {
+  const el = document.getElementById('order-summary-box');
+  if (!el) return;
+  const totalAmt = cart.reduce((s, c) => s + c.price * c.qty, 0);
+  el.innerHTML = `<h4>Order Summary (${cart.length} item${cart.length !== 1 ? 's' : ''})</h4>
+    ${cart.map(c => `<div class="order-line"><span>${c.name} × ${c.qty} (${c.size})</span><span>KSh ${(c.price * c.qty).toLocaleString('en-KE')}</span></div>`).join('')}
+    <div class="order-line total"><span>Total</span><span>KSh ${totalAmt.toLocaleString('en-KE')}</span></div>`;
+}
+
+function openCheckout() {
+  if (!cart.length) { showToast('Add items to your cart first!'); return; }
+  closeCart();
+  document.getElementById('checkout-form-wrap').style.display = 'block';
+  document.getElementById('checkout-success').style.display   = 'none';
+  buildOrderSummary();
+  document.getElementById('checkout-modal').classList.add('open');
+}
+function closeCheckout() { document.getElementById('checkout-modal').classList.remove('open'); }
+
+document.getElementById('checkout-open-btn').onclick = openCheckout;
+document.getElementById('checkout-close').onclick    = closeCheckout;
+
+document.getElementById('place-order-btn').onclick = async () => {
+  const name    = document.getElementById('c-name').value.trim();
+  const phone   = document.getElementById('c-phone').value.trim();
+  const address = document.getElementById('c-address').value.trim();
+  const county  = document.getElementById('c-county').value.trim();
+  const notes   = document.getElementById('c-notes').value.trim();
+  if (!name || !phone || !address) { showToast('Please fill in your name, phone, and address'); return; }
+  const btn = document.getElementById('place-order-btn');
+  btn.disabled = true; btn.textContent = 'Placing order…';
+  try {
+    const res = await fetch(`${API}/api/orders`, {
+      method : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body   : JSON.stringify({ name, phone, address, county, notes, items: cart.map(c => ({ name: c.name, size: c.size, qty: c.qty, price: c.price })) })
+    });
+    const data = await res.json();
+    if (res.ok) {
+      document.getElementById('success-order-id').textContent = 'Order ID: ' + data.order.id;
+      document.getElementById('checkout-form-wrap').style.display = 'none';
+      document.getElementById('checkout-success').style.display   = 'block';
+      cart = []; updateCartUI();
+    } else { showToast(data.error || 'Something went wrong. Please try again.'); }
+  } catch (e) { showToast('Network error. Please check your connection.'); }
+  btn.disabled = false; btn.textContent = 'Place Order — Pay on Delivery / M-Pesa';
+};
+
+// ── Toast ────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Init ─────────────────────────────────────────────────────────────────
+loadProducts();
+renderCartItems();
+</script>
+</body>
+</html>
