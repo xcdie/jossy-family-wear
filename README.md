@@ -5,16 +5,18 @@ A complete full-stack web shop for Jossy Sagide, Mbale's favourite family clothi
  What's included
 
 | File | Purpose |
+|---|---|
 | `server.js` | Node.js backend — REST API + static file server |
 | `public/index.html` | Full storefront (shop, cart, checkout) |
 | `public/admin.html` | Admin panel (dashboard, orders, products) |
 | `data/products.json` | Product catalogue |
 | `data/orders.json` | Orders database (grows as orders come in) |
+
  API Endpoints
 
  Products
 | Method | URL | Description |
-
+|---|---|---|
 | GET | `/api/products` | All products |
 | GET | `/api/products?category=Men` | Filter by category |
 | GET | `/api/products/:id` | Single product |
@@ -24,7 +26,7 @@ A complete full-stack web shop for Jossy Sagide, Mbale's favourite family clothi
 
 Orders
 | Method | URL | Description |
-
+|---|---|---|
 | POST | `/api/orders` | Place a new order |
 | GET | `/api/orders` | All orders (admin) |
 | GET | `/api/orders?status=Pending` | Filter by status |
@@ -32,10 +34,10 @@ Orders
 
  Stats
 | Method | URL | Description |
-
+|---|---|---|
 | GET | `/api/stats` | Dashboard summary numbers |
 
-Editing products
+ Editing products
 
 Edit `data/products.json` directly, or use the Admin panel at `/admin`.
 
