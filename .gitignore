@@ -1,0 +1,99 @@
+.DS_Store
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# Environment files
+.env
+.env.local
+.env.*
+
+# Editor directories
+.vscode/
+.idea/
+
+# Logs
+logs/
+*.log
+
+# Build outputs
+dist/
+build/
+
+# Temporary
+tmp/
+temp/
+
+# Coverage
+coverage/
+
+# SSH / keys
+*.pem
+*.key
+
+# Private keys and SSH
+.ssh/
+id_*.pem
+id_*.pub
+id_*
+
+# OS
+Thumbs.db
+
+## Cloud / credential files
+.aws/
+.azure/
+.gcloud/
+credentials.json
+google-services.json
+
+## Package manager creds
+.npmrc
+.yarnrc
+.yarnrc.yml
+.netrc
+
+## Database dumps / local DBs
+*.sql
+*.sqlite
+*.sqlite3
+*.db
+dump.rdb
+
+## Mobile / signing keys
+*.keystore
+*.jks
+
+## Terraform / infra
+*.tfstate
+*.tfstate.*
+.terraform/
+
+## Secrets / sensitive folders
+secrets/
+secret-*
+
+## Docker
+.docker/
+docker-compose.override.yml
+
+## Editor backups / histories
+*.swo
+*.swp
+*.swn
+*.bak
+*.tmp
+.history
+
+## Python envs
+venv/
+.venv/
+env/
+ENV/
+
+## Misc build/system
+target/
+bin/
+obj/
