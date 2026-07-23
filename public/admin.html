@@ -9,6 +9,18 @@
   :root { --orange:#e85d2f; --orange-light:#f07a52; --orange-pale:#fdf0ea; --charcoal:#2b2b2b; --gray:#888; --gray-light:#e8e3dc; --green:#4a9a6a; --green-bg:#edf7f2; --blue:#3a6fa8; --blue-bg:#eaf0f9; --red:#c0392b; --red-bg:#fdf0f0; --white:#fff; }
   body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f4f2ee; color:var(--charcoal); font-size:14px; min-height:100vh; }
 
+  .login-page { position:fixed; top:0; left:0; width:100%; height:100vh; background:linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .login-card { background:white; border-radius:12px; padding:48px; box-shadow:0 20px 60px rgba(0,0,0,.3); width:100%; max-width:360px; }
+  .login-card h1 { font-size:24px; font-weight:800; margin-bottom:8px; color:var(--charcoal); }
+  .login-card p { font-size:13px; color:var(--gray); margin-bottom:32px; }
+  .login-form { display:flex; flex-direction:column; gap:16px; }
+  .login-form input { padding:12px 14px; border:1.5px solid var(--gray-light); border-radius:8px; font-size:14px; outline:none; transition:border-color .2s; }
+  .login-form input:focus { border-color:var(--orange); }
+  .login-form button { padding:12px 16px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; }
+  .login-form button:hover { background:var(--orange-light); }
+  .login-form button:disabled { background:#ccc; cursor:not-allowed; }
+  .login-error { background:var(--red-bg); color:var(--red); padding:10px 12px; border-radius:6px; font-size:12px; display:none; }
+
   .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--charcoal); padding:0; display:flex; flex-direction:column; z-index:10; }
   .sidebar-logo { padding:20px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
   .sidebar-logo .brand { font-size:16px; font-weight:800; color:var(--orange); }
@@ -18,11 +30,12 @@
   .nav-item:hover { background:rgba(255,255,255,.08); color:white; }
   .nav-item.active { background:var(--orange); color:white; }
   .nav-item svg { flex-shrink:0; opacity:.8; }
-  .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); }
-  .sidebar-footer a { color:rgba(255,255,255,.5); font-size:12px; text-decoration:none; }
-  .sidebar-footer a:hover { color:var(--orange-light); }
+  .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); display:flex; flex-direction:column; gap:8px; }
+  .sidebar-footer a, .sidebar-footer button { color:rgba(255,255,255,.5); font-size:12px; text-decoration:none; border:none; background:none; cursor:pointer; text-align:left; transition:color .2s; }
+  .sidebar-footer a:hover, .sidebar-footer button:hover { color:var(--orange-light); }
 
-  .main { margin-left:220px; padding:28px; min-height:100vh; }
+  .main { margin-left:220px; padding:28px; min-height:100vh; display:none; }
+  .main.logged-in { display:block; }
   .page { display:none; }
   .page.active { display:block; }
 
@@ -94,6 +107,20 @@
 </head>
 <body>
 
+<!-- LOGIN PAGE -->
+<div class="login-page" id="login-page">
+  <div class="login-card">
+    <h1>Admin Access</h1>
+    <p>Enter your password to access the admin panel</p>
+    <div class="login-error" id="login-error"></div>
+    <form class="login-form" onsubmit="handleLogin(event)">
+      <input type="password" id="admin-password" placeholder="Password" required autofocus>
+      <button type="submit">Sign In</button>
+    </form>
+  </div>
+</div>
+
+<!-- ADMIN PANEL -->
 <div class="sidebar">
   <div class="sidebar-logo">
     <div class="brand">Jossy Sagide</div>
@@ -113,10 +140,10 @@
       Products
     </button>
   </nav>
-  <div class="sidebar-footer"><a href="/">← Back to Shop</a></div>
+  <div class="sidebar-footer"><a href="/">← Back to Shop</a><button onclick="logout()">Logout</button></div>
 </div>
 
-<div class="main">
+<div class="main" id="main">
 
   <!-- DASHBOARD -->
   <div class="page active" id="page-dashboard">
@@ -189,6 +216,56 @@
 <script>
 const API = '';
 
+// ── Auth ──────────────────────────────────────────────────────────────────
+let isAuthenticated = false;
+
+function checkAuth() {
+  isAuthenticated = !!document.cookie.split('; ').find(row => row.startsWith('adminSession='));
+  if (isAuthenticated) {
+    document.getElementById('login-page').style.display = 'none';
+    document.getElementById('main').classList.add('logged-in');
+    loadDashboard();
+  } else {
+    document.getElementById('login-page').style.display = 'flex';
+    document.getElementById('main').classList.remove('logged-in');
+  }
+}
+
+async function handleLogin(event) {
+  event.preventDefault();
+  const password = document.getElementById('admin-password').value;
+  const errorDiv = document.getElementById('login-error');
+  
+  try {
+    const res = await fetch(`${API}/api/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ password })
+    });
+    
+    if (res.ok) {
+      checkAuth();
+      document.getElementById('admin-password').value = '';
+    } else {
+      errorDiv.textContent = 'Invalid password. Please try again.';
+      errorDiv.style.display = 'block';
+    }
+  } catch (e) {
+    errorDiv.textContent = 'Login failed. Please try again.';
+    errorDiv.style.display = 'block';
+  }
+}
+
+async function logout() {
+  if (confirm('Are you sure you want to logout?')) {
+    try {
+      await fetch(`${API}/api/logout`, { method: 'POST' });
+    } catch (e) {}
+    checkAuth();
+  }
+}
+
+// ── UI Helpers ────────────────────────────────────────────────────────────
 function showPage(id, btn) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
@@ -216,10 +293,21 @@ function fmtDate(iso) {
   return new Date(iso).toLocaleString('en-KE', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
+// ── API Helper ────────────────────────────────────────────────────────────
+async function apiCall(endpoint, options = {}) {
+  const res = await fetch(`${API}${endpoint}`, options);
+  if (res.status === 401) {
+    showToast('Session expired. Please login again.', false);
+    checkAuth();
+    throw new Error('Unauthorized');
+  }
+  return res;
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
-    const [statsRes, ordersRes] = await Promise.all([fetch(`${API}/api/stats`), fetch(`${API}/api/orders`)]);
+    const [statsRes, ordersRes] = await Promise.all([apiCall('/api/stats'), apiCall('/api/orders')]);
     const stats  = await statsRes.json();
     const orders = await ordersRes.json();
     document.getElementById('stat-orders').textContent   = stats.totalOrders;
@@ -236,7 +324,7 @@ async function loadDashboard() {
       <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
       <td style="color:#888;font-size:11px">${fmtDate(o.createdAt)}</td>
     </tr>`).join('');
-  } catch (e) { showToast('Failed to load dashboard', false); }
+  } catch (e) { if (e.message !== 'Unauthorized') showToast('Failed to load dashboard', false); }
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────
@@ -244,10 +332,10 @@ let allOrders = [];
 
 async function loadOrders(statusFilter) {
   try {
-    const res = await fetch(`${API}/api/orders`);
+    const res = await apiCall('/api/orders');
     allOrders = await res.json();
     renderOrders(statusFilter || '');
-  } catch (e) { showToast('Failed to load orders', false); }
+  } catch (e) { if (e.message !== 'Unauthorized') showToast('Failed to load orders', false); }
 }
 
 function filterOrders(status, btn) {
@@ -277,15 +365,15 @@ function renderOrders(status) {
 
 async function updateOrderStatus(id, status) {
   try {
-    const res = await fetch(`${API}/api/orders/${encodeURIComponent(id)}`, {
+    const res = await apiCall(`/api/orders/${encodeURIComponent(id)}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ status })
     });
     if (res.ok) { showToast(`Order updated to "${status}"`); loadOrders(); } 
     else showToast('Failed to update order', false);
-  } catch (e) { showToast('Network error', false); }
+  } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
 }
 
-//  Products 
+// ── Products ──────────────────────────────────────────────────────────────
 async function loadProducts() {
   try {
     const res  = await fetch(`${API}/api/products`);
@@ -314,13 +402,13 @@ async function addProduct() {
   const img      = document.getElementById('p-img').value.trim();
   if (!name || !price) { showToast('Name and price are required', false); return; }
   try {
-    const res = await fetch(`${API}/api/products`, {
+    const res = await apiCall('/api/products', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ name, price, category, badge, stock, sizes, img })
     });
     if (res.ok) { showToast('Product added!'); clearProductForm(); loadProducts(); }
     else showToast('Failed to add product', false);
-  } catch (e) { showToast('Network error', false); }
+  } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
 }
 
 function clearProductForm() {
@@ -332,14 +420,14 @@ function clearProductForm() {
 async function deleteProduct(id, name) {
   if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
   try {
-    const res = await fetch(`${API}/api/products/${id}`, { method:'DELETE' });
+    const res = await apiCall(`/api/products/${id}`, { method:'DELETE' });
     if (res.ok) { showToast('Product deleted'); loadProducts(); }
     else showToast('Failed to delete', false);
-  } catch (e) { showToast('Network error', false); }
+  } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
 }
 
 // ── Init ──────────────────────────────────────────────────────────────────
-loadDashboard();
+checkAuth();
 </script>
 </body>
 </html>

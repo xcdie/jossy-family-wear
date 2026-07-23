@@ -1,12 +1,34 @@
-/**
- * Jossy Sagide — Full-Stack Server
- * Plain Node.js — zero npm packages required
- */
+
+  //Jossy Sagide — Full-Stack Server
+  //Plain Node.js — zero npm packages required
+ 
 
 require('dotenv').config();
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const MONGODB_URI = process.env.MONGODB_URI || '';
+
+// Admin authentication
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
+const adminSessions = new Map(); // sessionId -> { createdAt, expiresAt }
+
+function generateSession() {
+  const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+  const now = Date.now();
+  adminSessions.set(sessionId, { createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 }); // 24h
+  return sessionId;
+}
+
+function isValidSession(sessionId) {
+  if (!sessionId) return false;
+  const session = adminSessions.get(sessionId);
+  if (!session) return false;
+  if (Date.now() > session.expiresAt) {
+    adminSessions.delete(sessionId);
+    return false;
+  }
+  return true;
+}
 
 let mongoClient;
 let mongoDb;
@@ -101,6 +123,39 @@ const server = http.createServer(async (req, res) => {
 
   // ── API ──────────────────────────────────────────────────────────────────
 
+  // Helper: Check admin session from cookie or header
+  const getAdminSessionId = (req, res) => {
+    const cookie = req.headers.cookie || '';
+    const match = cookie.match(/adminSession=([^;]+)/);
+    return match ? match[1] : null;
+  };
+
+  const requireAdmin = (sessionId) => isValidSession(sessionId);
+
+  // POST /api/login  (admin login)
+  if (method === 'POST' && pathname === '/api/login') {
+    try {
+      const body = await bodyJSON(req);
+      if (body.password === ADMIN_PASSWORD) {
+        const sessionId = generateSession();
+        res.setHeader('Set-Cookie', `adminSession=${sessionId}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}`);
+        return json(res, 200, { success: true, sessionId });
+      } else {
+        return json(res, 401, { error: 'Invalid password' });
+      }
+    } catch (e) { return json(res, 400, { error: 'Bad JSON' }); }
+  }
+
+  // POST /api/logout  (admin logout)
+  if (method === 'POST' && pathname === '/api/logout') {
+    const sessionId = getAdminSessionId(req, res);
+    if (sessionId) {
+      adminSessions.delete(sessionId);
+    }
+    res.setHeader('Set-Cookie', 'adminSession=; Path=/; HttpOnly; Max-Age=0');
+    return json(res, 200, { success: true });
+  }
+
   // GET /api/products  [?category=Men|Women|Kids]
   if (method === 'GET' && pathname === '/api/products') {
     let products = readJSON(PRODUCTS_F);
@@ -125,6 +180,10 @@ const server = http.createServer(async (req, res) => {
 
   // POST /api/products  (admin: add product)
   if (method === 'POST' && pathname === '/api/products') {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     try {
       const body = await bodyJSON(req);
       const all  = readJSON(PRODUCTS_F);
@@ -146,6 +205,10 @@ const server = http.createServer(async (req, res) => {
 
   // PUT /api/products/:id  (admin: update product)
   if (method === 'PUT' && /^\/api\/products\/\d+$/.test(pathname)) {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     try {
       const id   = parseInt(pathname.split('/').pop(), 10);
       const body = await bodyJSON(req);
@@ -160,6 +223,10 @@ const server = http.createServer(async (req, res) => {
 
   // DELETE /api/products/:id  (admin)
   if (method === 'DELETE' && /^\/api\/products\/\d+$/.test(pathname)) {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     const id  = parseInt(pathname.split('/').pop(), 10);
     const all = readJSON(PRODUCTS_F);
     const filtered = all.filter(x => x.id !== id);
@@ -197,6 +264,10 @@ const server = http.createServer(async (req, res) => {
 
   // GET /api/orders  (admin)
   if (method === 'GET' && pathname === '/api/orders') {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     const orders = readJSON(ORDERS_F);
     // Filter by status
     const status = query.status;
@@ -206,6 +277,10 @@ const server = http.createServer(async (req, res) => {
 
   // PATCH /api/orders/:id  (admin: update status)
   if (method === 'PATCH' && /^\/api\/orders\/[^/]+$/.test(pathname)) {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     try {
       const id     = decodeURIComponent(pathname.split('/').pop());
       const body   = await bodyJSON(req);
@@ -220,6 +295,10 @@ const server = http.createServer(async (req, res) => {
 
   // GET /api/stats  (admin dashboard numbers)
   if (method === 'GET' && pathname === '/api/stats') {
+    const sessionId = getAdminSessionId(req, res);
+    if (!requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
     const orders   = readJSON(ORDERS_F);
     const products = readJSON(PRODUCTS_F);
     const revenue  = orders.reduce((s, o) => s + o.total, 0);
