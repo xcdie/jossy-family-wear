@@ -4,30 +4,50 @@
  
 
 require('dotenv').config();
+const crypto = require('crypto');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
-// Admin authentication
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || 'admin123';
-const adminSessions = new Map(); // sessionId -> { createdAt, expiresAt }
+// Admin authentication - require ADMIN_PASSWORD to be set
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+if (!ADMIN_PASSWORD) {
+  console.error('ERROR: ADMIN_PASSWORD environment variable must be set. Exiting.');
+  process.exit(1);
+}
 
-function generateSession() {
-  const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+let sessionsCollection; // MongoDB sessions collection
+
+async function generateSession() {
+  const sessionId = crypto.randomBytes(32).toString('hex');
   const now = Date.now();
-  adminSessions.set(sessionId, { createdAt: now, expiresAt: now + 24 * 60 * 60 * 1000 }); // 24h
+  const expiresAt = now + 24 * 60 * 60 * 1000; // 24h
+  
+  if (sessionsCollection) {
+    await sessionsCollection.insertOne({ sessionId, createdAt: now, expiresAt });
+  }
   return sessionId;
 }
 
-function isValidSession(sessionId) {
+async function isValidSession(sessionId) {
   if (!sessionId) return false;
-  const session = adminSessions.get(sessionId);
-  if (!session) return false;
-  if (Date.now() > session.expiresAt) {
-    adminSessions.delete(sessionId);
-    return false;
+  
+  if (sessionsCollection) {
+    const session = await sessionsCollection.findOne({ sessionId });
+    if (!session) return false;
+    if (Date.now() > session.expiresAt) {
+      await sessionsCollection.deleteOne({ sessionId });
+      return false;
+    }
+    return true;
   }
-  return true;
+  return false;
+}
+
+async function deleteSession(sessionId) {
+  if (sessionsCollection && sessionId) {
+    await sessionsCollection.deleteOne({ sessionId });
+  }
 }
 
 let mongoClient;
@@ -48,6 +68,9 @@ async function connectMongo() {
   try {
     await mongoClient.connect();
     mongoDb = mongoClient.db();
+    sessionsCollection = mongoDb.collection('admin_sessions');
+    // Create TTL index for automatic session cleanup
+    await sessionsCollection.createIndex({ expiresAt: 1 }, { expireAfterSeconds: 0 });
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('MongoDB connection failed:', err);
@@ -119,27 +142,31 @@ const server = http.createServer(async (req, res) => {
 
   // CORS (helpful for local dev)
   res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   if (method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
   // ── API ──────────────────────────────────────────────────────────────────
 
-  // Helper: Check admin session from cookie or header
-  const getAdminSessionId = (req, res) => {
+  // Helper: Check admin session from cookie
+  const getAdminSessionId = (req) => {
     const cookie = req.headers.cookie || '';
     const match = cookie.match(/adminSession=([^;]+)/);
     return match ? match[1] : null;
   };
 
-  const requireAdmin = (sessionId) => isValidSession(sessionId);
+  const requireAdmin = isValidSession;
 
   // POST /api/login  (admin login)
   if (method === 'POST' && pathname === '/api/login') {
     try {
       const body = await bodyJSON(req);
       if (body.password === ADMIN_PASSWORD) {
-        const sessionId = generateSession();
-        res.setHeader('Set-Cookie', `adminSession=${sessionId}; Path=/; HttpOnly; Max-Age=${24 * 60 * 60}`);
-        return json(res, 200, { success: true, sessionId });
+        const sessionId = await generateSession();
+        const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
+        const cookieValue = `adminSession=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${24 * 60 * 60}`;
+        res.setHeader('Set-Cookie', isSecure ? `${cookieValue}; Secure` : cookieValue);
+        return json(res, 200, { success: true });
       } else {
         return json(res, 401, { error: 'Invalid password' });
       }
@@ -148,11 +175,11 @@ const server = http.createServer(async (req, res) => {
 
   // POST /api/logout  (admin logout)
   if (method === 'POST' && pathname === '/api/logout') {
-    const sessionId = getAdminSessionId(req, res);
+    const sessionId = getAdminSessionId(req);
     if (sessionId) {
-      adminSessions.delete(sessionId);
+      await deleteSession(sessionId);
     }
-    res.setHeader('Set-Cookie', 'adminSession=; Path=/; HttpOnly; Max-Age=0');
+    res.setHeader('Set-Cookie', 'adminSession=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
     return json(res, 200, { success: true });
   }
 
@@ -180,8 +207,8 @@ const server = http.createServer(async (req, res) => {
 
   // POST /api/products  (admin: add product)
   if (method === 'POST' && pathname === '/api/products') {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     try {
@@ -205,8 +232,8 @@ const server = http.createServer(async (req, res) => {
 
   // PUT /api/products/:id  (admin: update product)
   if (method === 'PUT' && /^\/api\/products\/\d+$/.test(pathname)) {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     try {
@@ -223,8 +250,8 @@ const server = http.createServer(async (req, res) => {
 
   // DELETE /api/products/:id  (admin)
   if (method === 'DELETE' && /^\/api\/products\/\d+$/.test(pathname)) {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     const id  = parseInt(pathname.split('/').pop(), 10);
@@ -264,8 +291,8 @@ const server = http.createServer(async (req, res) => {
 
   // GET /api/orders  (admin)
   if (method === 'GET' && pathname === '/api/orders') {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     const orders = readJSON(ORDERS_F);
@@ -277,8 +304,8 @@ const server = http.createServer(async (req, res) => {
 
   // PATCH /api/orders/:id  (admin: update status)
   if (method === 'PATCH' && /^\/api\/orders\/[^/]+$/.test(pathname)) {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     try {
@@ -295,8 +322,8 @@ const server = http.createServer(async (req, res) => {
 
   // GET /api/stats  (admin dashboard numbers)
   if (method === 'GET' && pathname === '/api/stats') {
-    const sessionId = getAdminSessionId(req, res);
-    if (!requireAdmin(sessionId)) {
+    const sessionId = getAdminSessionId(req);
+    if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
     const orders   = readJSON(ORDERS_F);
