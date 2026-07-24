@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -115,7 +114,7 @@
     <p>Enter your password to access the admin panel</p>
     <div class="login-error" id="login-error"></div>
     <form class="login-form" onsubmit="handleLogin(event)">
-      <input type="password" id="admin-password" placeholder="Password" required autofocus>
+      <input type="password" id="admin-password" name="password" placeholder="Password" required autofocus>
       <button type="submit">Sign In</button>
     </form>
   </div>
@@ -220,8 +219,17 @@ const API = '';
 // ── Auth ──────────────────────────────────────────────────────────────────
 let isAuthenticated = false;
 
-function checkAuth() {
-  isAuthenticated = !!document.cookie.split('; ').find(row => row.startsWith('adminSession='));
+// Checks auth status via the server, since the session cookie is HttpOnly
+// and therefore invisible to client-side JS (document.cookie) by design.
+async function checkAuth() {
+  try {
+    const res  = await fetch(`${API}/api/me`);
+    const data = await res.json();
+    isAuthenticated = !!data.authenticated;
+  } catch (e) {
+    isAuthenticated = false;
+  }
+
   if (isAuthenticated) {
     document.getElementById('login-page').style.display = 'none';
     document.getElementById('main').classList.add('logged-in');
@@ -236,17 +244,18 @@ async function handleLogin(event) {
   event.preventDefault();
   const password = document.getElementById('admin-password').value;
   const errorDiv = document.getElementById('login-error');
-  
+
   try {
     const res = await fetch(`${API}/api/login`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
-    
+
     if (res.ok) {
-      checkAuth();
+      errorDiv.style.display = 'none';
       document.getElementById('admin-password').value = '';
+      await checkAuth();
     } else {
       errorDiv.textContent = 'Invalid password. Please try again.';
       errorDiv.style.display = 'block';

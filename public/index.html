@@ -15,25 +15,25 @@
     --white: #ffffff; --shadow: 0 2px 12px rgba(0,0,0,0.08);
     --shadow-hover: 0 6px 24px rgba(0,0,0,0.14); --radius: 12px; --radius-sm: 8px;
   }
-  html { scroll-behavior: smooth; }
-  body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:var(--cream); color:var(--charcoal); line-height:1.6; font-size:15px; }
+  html { scroll-behavior: smooth; overflow-x: hidden; }
+  body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:var(--cream); color:var(--charcoal); line-height:1.6; font-size:15px; overflow-x: hidden; }
 
   .topbar { background:var(--charcoal); color:var(--cream); text-align:center; padding:8px 16px; font-size:13px; letter-spacing:.02em; }
   .topbar a { color:var(--orange-light); text-decoration:none; }
 
   header { background:var(--white); border-bottom:2px solid var(--gray-light); position:sticky; top:0; z-index:100; }
   .header-inner { max-width:1200px; margin:0 auto; padding:14px 20px; display:flex; align-items:center; justify-content:space-between; gap:16px; }
-  .logo { display:flex; flex-direction:column; line-height:1; text-decoration:none; }
+  .logo { display:flex; flex-direction:column; line-height:1; text-decoration:none; min-width:0; }
   .logo-name { font-size:24px; font-weight:800; color:var(--orange); letter-spacing:-0.5px; }
-  .logo-sub { font-size:10px; color:var(--gray); letter-spacing:.06em; text-transform:uppercase; font-weight:500; }
+  .logo-sub { font-size:10px; color:var(--gray); letter-spacing:.06em; text-transform:uppercase; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
   nav { display:flex; align-items:center; gap:4px; }
   nav a { text-decoration:none; color:var(--charcoal); font-weight:500; font-size:14px; padding:6px 12px; border-radius:20px; transition:background .2s,color .2s; }
   nav a:hover { background:var(--orange-pale); color:var(--orange); }
   nav a.sale { color:var(--orange); font-weight:700; }
 
-  .header-actions { display:flex; align-items:center; gap:10px; }
-  .cart-btn { background:var(--orange); color:white; border:none; border-radius:24px; padding:8px 16px; cursor:pointer; display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; transition:background .2s,transform .1s; }
+  .header-actions { display:flex; align-items:center; gap:10px; flex-shrink:0; }
+  .cart-btn { background:var(--orange); color:white; border:none; border-radius:24px; padding:8px 16px; cursor:pointer; display:flex; align-items:center; gap:7px; font-size:14px; font-weight:600; transition:background .2s,transform .1s; white-space:nowrap; }
   .cart-btn:hover { background:var(--orange-light); transform:translateY(-1px); }
   .cart-count { background:var(--charcoal); color:white; border-radius:50%; width:20px; height:20px; font-size:11px; font-weight:700; display:flex; align-items:center; justify-content:center; transition:transform .3s; }
   .cart-count.bump { transform:scale(1.4); }
@@ -143,6 +143,7 @@
   .footer-col ul li a:hover { color:var(--orange-light); }
   .contact-item { display:flex; gap:8px; align-items:flex-start; margin-bottom:10px; font-size:13px; }
   .contact-item svg { flex-shrink:0; margin-top:2px; opacity:.6; }
+  .contact-item span, .contact-item a { overflow-wrap: break-word; word-break: break-word; min-width:0; }
   .footer-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:20px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; font-size:12px; color:rgba(255,255,255,.4); }
   .mpesa-badge { background:#00a550; color:white; font-size:11px; font-weight:700; padding:3px 10px; border-radius:4px; letter-spacing:.04em; }
 
@@ -160,8 +161,8 @@
   .empty-cart svg { opacity:.3; margin-bottom:12px; }
   .cart-item { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--gray-light); align-items:flex-start; }
   .cart-item-img { width:64px; height:64px; border-radius:8px; object-fit:cover; flex-shrink:0; background:var(--gray-light); }
-  .cart-item-details { flex:1; }
-  .cart-item-name { font-size:13px; font-weight:600; margin-bottom:3px; line-height:1.3; }
+  .cart-item-details { flex:1; min-width:0; }
+  .cart-item-name { font-size:13px; font-weight:600; margin-bottom:3px; line-height:1.3; overflow-wrap:break-word; word-break:break-word; }
   .cart-item-meta { font-size:12px; color:var(--gray); margin-bottom:8px; }
   .cart-item-price { font-size:14px; font-weight:700; color:var(--orange); }
   .qty-controls { display:flex; align-items:center; gap:8px; margin-top:6px; }
@@ -192,7 +193,8 @@
   .form-row { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
   .order-summary { background:var(--orange-pale); border-radius:10px; padding:14px; margin-bottom:18px; }
   .order-summary h4 { font-size:13px; font-weight:700; margin-bottom:10px; color:var(--charcoal); }
-  .order-line { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+  .order-line { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; gap:10px; }
+  .order-line span:first-child { overflow-wrap:break-word; word-break:break-word; }
   .order-line.total { font-weight:800; font-size:15px; color:var(--orange); border-top:1px solid rgba(0,0,0,.1); padding-top:8px; margin-top:4px; }
   .place-order-btn { width:100%; background:var(--orange); color:white; border:none; border-radius:10px; padding:14px; font-size:15px; font-weight:700; cursor:pointer; transition:background .2s; }
   .place-order-btn:hover { background:var(--orange-light); }
@@ -204,8 +206,10 @@
   .order-id-badge { display:inline-block; background:var(--orange-pale); color:var(--orange); font-weight:700; padding:6px 16px; border-radius:20px; font-size:13px; margin-top:12px; }
 
   /* Toast */
-  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; }
+  .toast { position:fixed; bottom:24px; left:50%; transform:translateX(-50%); background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; max-width:calc(100vw - 32px); text-align:center; }
   .toast.show { opacity:1; }
+
+  .product-name { overflow-wrap: break-word; word-break: break-word; }
 
   @media (max-width:900px) {
     .products-grid { grid-template-columns:repeat(2,1fr); }
@@ -213,6 +217,7 @@
   }
   @media (max-width:700px) {
     nav { display:none; } .hamburger { display:flex; }
+    .header-inner { padding:12px 16px; gap:10px; }
     .categories-grid { grid-template-columns:1fr; gap:14px; }
     .cat-card { padding:22px 18px; text-align:left; display:flex; align-items:flex-start; gap:16px; }
     .cat-icon { margin:0; flex-shrink:0; width:52px; height:52px; font-size:22px; }
@@ -223,14 +228,16 @@
     .form-row { grid-template-columns:1fr; }
   }
   @media (max-width:600px) { .products-grid { grid-template-columns:1fr; } .hero { padding:50px 20px 44px; } section { padding:44px 16px; } }
+  @media (max-width:380px) {
+    .header-inner { gap:8px; }
+    .cart-btn { padding:8px 12px; font-size:13px; gap:5px; }
+    .logo-name { font-size:20px; }
+    .logo-sub { font-size:9px; }
+    .modal-box { padding:20px; }
+  }
 </style>
 </head>
 <body>
-
-<div class="topbar">
-  <a href="tel:+254726576044">+254 726 576 044</a>
-  &nbsp;&middot;&nbsp; Free delivery in Mbale and orders above KSh 5,000
-</div>
 
 <header>
   <div class="header-inner">

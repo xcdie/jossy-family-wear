@@ -2,7 +2,6 @@
   //Jossy Sagide — Full-Stack Server
   //Plain Node.js — zero npm packages required
  
-
 require('dotenv').config();
 const crypto = require('crypto');
 const { MongoClient, ServerApiVersion } = require('mongodb');
@@ -22,7 +21,7 @@ async function generateSession() {
   const sessionId = crypto.randomBytes(32).toString('hex');
   const now = Date.now();
   const expiresAt = now + 24 * 60 * 60 * 1000; // 24h
-  
+
   if (sessionsCollection) {
     await sessionsCollection.insertOne({ sessionId, createdAt: now, expiresAt });
   }
@@ -31,7 +30,7 @@ async function generateSession() {
 
 async function isValidSession(sessionId) {
   if (!sessionId) return false;
-  
+
   if (sessionsCollection) {
     const session = await sessionsCollection.findOne({ sessionId });
     if (!session) return false;
@@ -156,6 +155,13 @@ const server = http.createServer(async (req, res) => {
   };
 
   const requireAdmin = isValidSession;
+
+  // GET /api/me  (check current admin auth status)
+  if (method === 'GET' && pathname === '/api/me') {
+    const sessionId = getAdminSessionId(req);
+    const valid = await requireAdmin(sessionId);
+    return json(res, 200, { authenticated: valid });
+  }
 
   // POST /api/login  (admin login)
   if (method === 'POST' && pathname === '/api/login') {
@@ -297,7 +303,7 @@ const server = http.createServer(async (req, res) => {
     }
     const orders = readJSON(ORDERS_F);
     // Filter by status
-    const status = query.status;
+    const { status } = query;
     const result = status ? orders.filter(o => o.status === status) : orders;
     return json(res, 200, result.slice().reverse());
   }
@@ -367,4 +373,3 @@ connectMongo().finally(() => {
     console.log(`   Admin → http://localhost:${PORT}/admin\n`);
   });
 });
-
