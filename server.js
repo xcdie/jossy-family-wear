@@ -137,7 +137,8 @@ function bodyJSON(req) {
 
 const server = http.createServer(async (req, res) => {
   const { pathname, query } = url.parse(req.url, true);
-  const method = req.method;
+  const API = '';
+const method = req.method;
 
   // CORS (helpful for local dev)
   res.setHeader('Access-Control-Allow-Origin', '*');

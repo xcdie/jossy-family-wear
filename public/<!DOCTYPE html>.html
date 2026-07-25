@@ -33,18 +33,6 @@
   .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); display:flex; flex-direction:column; gap:8px; }
   .sidebar-footer a, .sidebar-footer button { color:rgba(255,255,255,.5); font-size:12px; text-decoration:none; border:none; background:none; cursor:pointer; text-align:left; transition:color .2s; }
   .sidebar-footer a:hover, .sidebar-footer button:hover { color:var(--orange-light); }
-  /* Responsive Table Wrapper */
-  .table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; 
-  }
-  
-  .table-responsive table {
-    width: 100%;
-    min-width: 650px; /* Forces the table to stay wide enough to read */
-    white-space: nowrap; /* Stops text from wrapping awkwardly */
-  }
 
   .main { margin-left:220px; padding:28px; min-height:100vh; display:none; }
   .main.logged-in { display:block; }
@@ -79,6 +67,10 @@
   .filter-row { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:14px; }
   .filter-pill { background:var(--gray-light); color:var(--charcoal); border:none; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:600; cursor:pointer; transition:all .2s; }
   .filter-pill.active,.filter-pill:hover { background:var(--orange); color:white; }
+
+  /* Responsive Table Wrapper */
+  .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .table-responsive table { width:100%; min-width:650px; white-space:nowrap; }
 
   table { width:100%; border-collapse:collapse; font-size:13px; }
   th { text-align:left; padding:10px 12px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:var(--gray); border-bottom:2px solid var(--gray-light); background:#fafaf8; }
@@ -139,14 +131,6 @@
     <div class="sub">Admin Panel</div>
   </div>
   <nav>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
-      <!-- Add wrapper here -->
-      <div class="table-responsive">
-        <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="recent-orders-body"></tbody></table>
-      </div>
-    </div>
     <button class="nav-item active" onclick="showPage('dashboard',this)">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       Dashboard
@@ -177,13 +161,14 @@
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
-      <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody id="recent-orders-body"></tbody></table>
+      <div class="table-responsive">
+        <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+        <tbody id="recent-orders-body"></tbody></table>
+      </div>
     </div>
   </div>
 
   <!-- ORDERS -->
- 
   <div class="page" id="page-orders">
     <div class="page-title">Orders</div>
     <div class="page-sub">Manage and update customer orders</div>
@@ -195,24 +180,16 @@
         <button class="filter-pill" onclick="filterOrders('Delivered',this)">Delivered</button>
         <button class="filter-pill" onclick="filterOrders('Cancelled',this)">Cancelled</button>
       </div>
-      <table>
-        <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="orders-body"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- PRODUCTS -->
-   <div class="card">
-      <div class="card-header"><div class="card-title">All Products</div><button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button></div>
-      <!-- Add wrapper here -->
-      <div class="table-responsive">
-        <table>
-          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
-          <tbody id="products-body"></tbody>
-        </table>
-      </div>
-    </div>
   <div class="page" id="page-products">
     <div class="page-title">Products</div>
     <div class="page-sub">Manage your product catalogue</div>
@@ -233,10 +210,12 @@
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">All Products</div><button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button></div>
-      <table>
-        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
-        <tbody id="products-body"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -428,7 +407,7 @@ async function loadProducts() {
       <td><strong>KSh ${p.price.toLocaleString('en-KE')}</strong></td>
       <td>${p.stock ?? '—'}</td>
       <td>${p.sizes.join(', ')}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')">Delete</button></td>
+      <td><button class="btn btn-danger btn-sm" onclick="deleteProduct('${p.id}','${p.name.replace(/'/g,"\\'")}')">Delete</button></td>
     </tr>`).join('');
   } catch (e) { showToast('Failed to load products', false); }
 }
