@@ -9,7 +9,7 @@ const { MongoClient, ServerApiVersion } = require('mongodb');
 const MONGODB_URI = process.env.MONGODB_URI || '';
 
 // Admin authentication - require ADMIN_PASSWORD to be set
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
+const {ADMIN_PASSWORD} = process.env;
 if (!ADMIN_PASSWORD) {
   console.error('ERROR: ADMIN_PASSWORD environment variable must be set. Exiting.');
   process.exit(1);
@@ -117,6 +117,20 @@ function staticFile(res, filePath) {
   fs.createReadStream(filePath).pipe(res);
 }
 
+function resolvePublicPath(requestPath) {
+  if (!requestPath || typeof requestPath !== 'string') return null;
+  if (path.isAbsolute(requestPath)) return null;
+  if (requestPath.includes('\0') || requestPath.includes('..') || requestPath.includes('\\')) return null;
+  if (!/^[A-Za-z0-9._\/-]+$/.test(requestPath)) return null;
+
+  const trimmed = requestPath.replace(/^\/+/, '');
+  if (!trimmed) return null;
+
+  const resolved = path.resolve(PUBLIC_DIR, trimmed);
+  if (resolved !== PUBLIC_DIR && !resolved.startsWith(PUBLIC_DIR + path.sep)) return null;
+  return resolved;
+}
+
 function json(res, status, data) {
   res.writeHead(status, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
@@ -138,7 +152,7 @@ function bodyJSON(req) {
 const server = http.createServer(async (req, res) => {
   const { pathname, query } = url.parse(req.url, true);
   const API = '';
-const method = req.method;
+const {method} = req;
 
   // CORS (helpful for local dev)
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -357,8 +371,8 @@ const method = req.method;
   }
 
   // Other static files
-  const filePath = path.join(PUBLIC_DIR, pathname);
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
+  const filePath = resolvePublicPath(pathname);
+  if (filePath && fs.existsSync(filePath) && fs.statSync(filePath).isFile()) {
     return staticFile(res, filePath);
   }
 
