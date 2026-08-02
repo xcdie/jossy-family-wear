@@ -2,7 +2,6 @@
   //Jossy Sagide — Full-Stack Server
   //Plain Node.js — zero npm packages required
  
-require('dotenv').config();
 const crypto = require('crypto');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -19,13 +18,14 @@ let sessionsCollection; // MongoDB sessions collection
 
 async function generateSession() {
   const sessionId = crypto.randomBytes(32).toString('hex');
+  const csrfToken = crypto.randomBytes(24).toString('hex');
   const now = Date.now();
   const expiresAt = now + 24 * 60 * 60 * 1000; // 24h
 
   if (sessionsCollection) {
-    await sessionsCollection.insertOne({ sessionId, createdAt: now, expiresAt });
+    await sessionsCollection.insertOne({ sessionId, csrfToken, createdAt: now, expiresAt });
   }
-  return sessionId;
+  return { sessionId, csrfToken };
 }
 
 async function isValidSession(sessionId) {
@@ -43,6 +43,15 @@ async function isValidSession(sessionId) {
   return false;
 }
 
+async function validateCsrf(req, sessionId) {
+  if (!sessionId || !sessionsCollection) return false;
+  const token = req.headers['x-csrf-token'];
+  if (!token) return false;
+  const session = await sessionsCollection.findOne({ sessionId });
+  if (!session || Date.now() > session.expiresAt) return false;
+  return token === session.csrfToken;
+}
+
 async function deleteSession(sessionId) {
   if (sessionsCollection && sessionId) {
     await sessionsCollection.deleteOne({ sessionId });
@@ -54,8 +63,8 @@ let mongoDb;
 
 async function connectMongo() {
   if (!MONGODB_URI) {
-    console.warn('MONGODB_URI not set; skipping MongoDB connection');
-    return;
+    console.error('ERROR: MONGODB_URI environment variable must be set. Exiting.');
+    process.exit(1);
   }
   mongoClient = new MongoClient(MONGODB_URI, {
     serverApi: {
@@ -73,6 +82,7 @@ async function connectMongo() {
     console.log('Connected to MongoDB');
   } catch (err) {
     console.error('MongoDB connection failed:', err);
+    process.exit(1);
   }
 }
 
@@ -86,6 +96,20 @@ const DATA_DIR     = path.join(__dirname, 'data');
 const PUBLIC_DIR   = path.join(__dirname, 'public');
 const PRODUCTS_F   = path.join(DATA_DIR, 'products.json');
 const ORDERS_F     = path.join(DATA_DIR, 'orders.json');
+
+const MAX_BODY_SIZE = 1e6; // 1 MB
+const LOGIN_RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+const LOGIN_RATE_LIMIT_MAX = 5;
+const ALLOWED_ORIGINS = process.env.ALLOWED_ORIGINS
+  ? process.env.ALLOWED_ORIGINS.split(',').map(o => o.trim()).filter(Boolean)
+  : ['http://localhost:3000'];
+const loginAttempts = new Map();
+
+function getRequestIp(req) {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) return forwarded.split(',')[0].trim();
+  return req.socket.remoteAddress || 'unknown';
+}
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -145,11 +169,17 @@ function json(res, status, data) {
   res.end(JSON.stringify(data));
 }
 
-function bodyJSON(req) {
+function bodyJSON(req, maxSize = MAX_BODY_SIZE) {
   return new Promise((resolve, reject) => {
     let raw = '';
-    req.on('data', c => (raw += c));
-    req.on('end',  () => {
+    req.on('data', chunk => {
+      raw += chunk;
+      if (raw.length > maxSize) {
+        req.destroy();
+        reject(new Error('Body too large'));
+      }
+    });
+    req.on('end', () => {
       try { resolve(JSON.parse(raw)); }
       catch (e) { reject(e); }
     });
@@ -163,10 +193,15 @@ const server = http.createServer(async (req, res) => {
   const API = '';
 const {method} = req;
 
-  // CORS (helpful for local dev)
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  // CORS (restrict to allowed frontends)
+  const {origin} = req.headers;
+  if (origin && ALLOWED_ORIGINS.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+    res.setHeader('Vary', 'Origin');
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   if (method === 'OPTIONS') { res.writeHead(204); return res.end(); }
 
   // ── API ──────────────────────────────────────────────────────────────────
@@ -189,26 +224,46 @@ const {method} = req;
 
   // POST /api/login  (admin login)
   if (method === 'POST' && pathname === '/api/login') {
+    const ip = getRequestIp(req);
+    const now = Date.now();
+    const attempt = loginAttempts.get(ip) || { count: 0, firstAt: now };
+    if (now - attempt.firstAt > LOGIN_RATE_LIMIT_WINDOW_MS) {
+      attempt.count = 0;
+      attempt.firstAt = now;
+    }
+    if (attempt.count >= LOGIN_RATE_LIMIT_MAX) {
+      return json(res, 429, { error: 'Too many login attempts. Try again later.' });
+    }
+
     try {
       const body = await bodyJSON(req);
       if (body.password === ADMIN_PASSWORD) {
-        const sessionId = await generateSession();
-        const isSecure = req.headers['x-forwarded-proto'] === 'https' || process.env.NODE_ENV === 'production';
+        loginAttempts.delete(ip);
+        const { sessionId, csrfToken } = await generateSession();
+        const isSecure = req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted);
         const cookieValue = `adminSession=${sessionId}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${24 * 60 * 60}`;
         res.setHeader('Set-Cookie', isSecure ? `${cookieValue}; Secure` : cookieValue);
-        return json(res, 200, { success: true });
+        return json(res, 200, { success: true, csrfToken });
       } else {
+        attempt.count += 1;
+        loginAttempts.set(ip, attempt);
         return json(res, 401, { error: 'Invalid password' });
       }
-    } catch (e) { return json(res, 400, { error: 'Bad JSON' }); }
+    } catch (e) {
+      return json(res, 400, { error: e.message === 'Body too large' ? 'Request body too large' : 'Bad JSON' });
+    }
   }
 
   // POST /api/logout  (admin logout)
   if (method === 'POST' && pathname === '/api/logout') {
     const sessionId = getAdminSessionId(req);
-    if (sessionId) {
-      await deleteSession(sessionId);
+    if (!await requireAdmin(sessionId)) {
+      return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
+    if (!await validateCsrf(req, sessionId)) {
+      return json(res, 403, { error: 'Invalid CSRF token' });
+    }
+    await deleteSession(sessionId);
     res.setHeader('Set-Cookie', 'adminSession=; Path=/; HttpOnly; SameSite=Strict; Max-Age=0');
     return json(res, 200, { success: true });
   }
@@ -241,23 +296,41 @@ const {method} = req;
     if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
+    if (!await validateCsrf(req, sessionId)) {
+      return json(res, 403, { error: 'Invalid CSRF token' });
+    }
     try {
       const body = await bodyJSON(req);
-      const all  = readJSON(PRODUCTS_F);
+      const name = typeof body.name === 'string' ? body.name.trim() : '';
+      const category = typeof body.category === 'string' ? body.category.trim() : 'Men';
+      const badge = body.badge == null ? null : String(body.badge).trim();
+      const img = typeof body.img === 'string' ? body.img.trim() : '';
+      const price = Number(body.price);
+      const stock = Number(body.stock);
+      const sizes = Array.isArray(body.sizes) ? body.sizes.filter(s => typeof s === 'string').slice(0, 8) : ['S','M','L','XL'];
+      if (!name || name.length > 100 || category.length > 50 || badge?.length > 50 || img.length > 255) {
+        return json(res, 400, { error: 'Invalid product data' });
+      }
+      if (!Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) {
+        return json(res, 400, { error: 'Invalid price or stock' });
+      }
+      const all = readJSON(PRODUCTS_F);
       const newP = {
         id      : Date.now(),
-        name    : body.name    || 'Unnamed',
-        price   : Number(body.price)  || 0,
-        category: body.category || 'Men',
-        badge   : body.badge   || null,
-        sizes   : body.sizes   || ['S','M','L','XL'],
-        img     : body.img     || '',
-        stock   : Number(body.stock)  || 0
+        name,
+        price,
+        category,
+        badge,
+        sizes: sizes.length ? sizes : ['S','M','L','XL'],
+        img,
+        stock
       };
       all.push(newP);
       writeJSON(PRODUCTS_F, all);
       return json(res, 201, newP);
-    } catch (e) { return json(res, 400, { error: 'Bad JSON' }); }
+    } catch (e) {
+      return json(res, 400, { error: e.message === 'Body too large' ? 'Request body too large' : 'Bad JSON' });
+    }
   }
 
   // PUT /api/products/:id  (admin: update product)
@@ -266,16 +339,44 @@ const {method} = req;
     if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
+    if (!await validateCsrf(req, sessionId)) {
+      return json(res, 403, { error: 'Invalid CSRF token' });
+    }
     try {
       const id   = parseInt(pathname.split('/').pop(), 10);
       const body = await bodyJSON(req);
       const all  = readJSON(PRODUCTS_F);
       const idx  = all.findIndex(x => x.id === id);
       if (idx === -1) return json(res, 404, { error: 'Not found' });
-      all[idx] = { ...all[idx], ...body, id };
+      const name = typeof body.name === 'string' ? body.name.trim() : all[idx].name;
+      const category = typeof body.category === 'string' ? body.category.trim() : all[idx].category;
+      const badge = body.badge == null ? all[idx].badge : String(body.badge).trim();
+      const img = typeof body.img === 'string' ? body.img.trim() : all[idx].img;
+      const price = body.price == null ? all[idx].price : Number(body.price);
+      const stock = body.stock == null ? all[idx].stock : Number(body.stock);
+      const sizes = Array.isArray(body.sizes) ? body.sizes.filter(s => typeof s === 'string').slice(0, 8) : all[idx].sizes;
+      if (!name || name.length > 100 || category.length > 50 || badge?.length > 50 || img.length > 255) {
+        return json(res, 400, { error: 'Invalid product data' });
+      }
+      if (!Number.isFinite(price) || price < 0 || !Number.isInteger(stock) || stock < 0) {
+        return json(res, 400, { error: 'Invalid price or stock' });
+      }
+      all[idx] = {
+        ...all[idx],
+        id,
+        name,
+        category,
+        badge,
+        img,
+        price,
+        stock,
+        sizes: sizes.length ? sizes : all[idx].sizes
+      };
       writeJSON(PRODUCTS_F, all);
       return json(res, 200, all[idx]);
-    } catch (e) { return json(res, 400, { error: 'Bad JSON' }); }
+    } catch (e) {
+      return json(res, 400, { error: e.message === 'Body too large' ? 'Request body too large' : 'Bad JSON' });
+    }
   }
 
   // DELETE /api/products/:id  (admin)
@@ -283,6 +384,9 @@ const {method} = req;
     const sessionId = getAdminSessionId(req);
     if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
+    }
+    if (!await validateCsrf(req, sessionId)) {
+      return json(res, 403, { error: 'Invalid CSRF token' });
     }
     const id  = parseInt(pathname.split('/').pop(), 10);
     const all = readJSON(PRODUCTS_F);
@@ -338,16 +442,22 @@ const {method} = req;
     if (!await requireAdmin(sessionId)) {
       return json(res, 401, { error: 'Unauthorized. Admin login required.' });
     }
+    if (!await validateCsrf(req, sessionId)) {
+      return json(res, 403, { error: 'Invalid CSRF token' });
+    }
     try {
       const id     = decodeURIComponent(pathname.split('/').pop());
       const body   = await bodyJSON(req);
       const orders = readJSON(ORDERS_F);
       const idx    = orders.findIndex(o => o.id === id);
       if (idx === -1) return json(res, 404, { error: 'Order not found' });
-      orders[idx].status = body.status || orders[idx].status;
+      const status = typeof body.status === 'string' ? body.status.trim() : orders[idx].status;
+      orders[idx].status = status;
       writeJSON(ORDERS_F, orders);
       return json(res, 200, orders[idx]);
-    } catch (e) { return json(res, 400, { error: 'Bad JSON' }); }
+    } catch (e) {
+      return json(res, 400, { error: e.message === 'Body too large' ? 'Request body too large' : 'Bad JSON' });
+    }
   }
 
   // GET /api/stats  (admin dashboard numbers)
