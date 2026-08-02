@@ -120,11 +120,20 @@ function staticFile(res, filePath) {
 function resolvePublicPath(requestPath) {
   if (!requestPath || typeof requestPath !== 'string') return null;
   if (path.isAbsolute(requestPath)) return null;
-  if (requestPath.includes('\0') || requestPath.includes('..') || requestPath.includes('\\')) return null;
-  if (!/^[A-Za-z0-9._\/-]+$/.test(requestPath)) return null;
+  if (requestPath.includes('\0') || requestPath.includes('\\')) return null;
 
-  const trimmed = requestPath.replace(/^\/+/, '');
-  if (!trimmed) return null;
+  let decoded;
+  try {
+    decoded = decodeURIComponent(requestPath);
+  } catch (e) {
+    return null;
+  }
+
+  if (decoded.includes('..') || decoded.includes('\0') || decoded.includes('\\')) return null;
+  if (!/^[A-Za-z0-9._\/-]+$/.test(decoded)) return null;
+
+  const trimmed = decoded.replace(/^\/+/, '');
+  if (!trimmed || trimmed === '.' || trimmed === '..') return null;
 
   const resolved = path.resolve(PUBLIC_DIR, trimmed);
   if (resolved !== PUBLIC_DIR && !resolved.startsWith(PUBLIC_DIR + path.sep)) return null;
