@@ -141,10 +141,9 @@
   <nav>
     <div class="card">
       <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
-      <!-- Add wrapper here -->
       <div class="table-responsive">
         <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="recent-orders-body"></tbody></table>
+        <tbody id="sidebar-recent-orders-body"></tbody></table>
       </div>
     </div>
     <button class="nav-item active" onclick="showPage('dashboard',this)">
@@ -203,16 +202,6 @@
   </div>
 
   <!-- PRODUCTS -->
-   <div class="card">
-      <div class="card-header"><div class="card-title">All Products</div><button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button></div>
-      <!-- Add wrapper here -->
-      <div class="table-responsive">
-        <table>
-          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
-          <tbody id="products-body"></tbody>
-        </table>
-      </div>
-    </div>
   <div class="page" id="page-products">
     <div class="page-title">Products</div>
     <div class="page-sub">Manage your product catalogue</div>
@@ -246,6 +235,7 @@
 
 <script>
 const API = '';
+let csrfToken = sessionStorage.getItem('csrfToken') || null;
 
 // ── Auth ──────────────────────────────────────────────────────────────────
 let isAuthenticated = false;
@@ -282,13 +272,16 @@ async function handleLogin(event) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
+    const data = await res.json();
 
-    if (res.ok) {
+    if (res.ok && data.csrfToken) {
       errorDiv.style.display = 'none';
-      document.getElementById('admin-password').value = '';
+      document.getElementById('admin-password').value = '';    
+      csrfToken = data.csrfToken;
+      sessionStorage.setItem('csrfToken', csrfToken);
       await checkAuth();
     } else {
-      errorDiv.textContent = 'Invalid password. Please try again.';
+      errorDiv.textContent = data.error || 'Invalid password. Please try again.';
       errorDiv.style.display = 'block';
     }
   } catch (e) {
@@ -300,8 +293,10 @@ async function handleLogin(event) {
 async function logout() {
   if (confirm('Are you sure you want to logout?')) {
     try {
-      await fetch(`${API}/api/logout`, { method: 'POST' });
+      await authFetch('/api/logout', { method: 'POST' });
     } catch (e) {}
+    csrfToken = null;
+    sessionStorage.removeItem('csrfToken');
     checkAuth();
   }
 }
@@ -345,6 +340,14 @@ async function apiCall(endpoint, options = {}) {
   return res;
 }
 
+function authFetch(endpoint, options = {}) {
+  options.headers = { ...(options.headers || {}) };
+  if (csrfToken) {
+    options.headers['X-CSRF-Token'] = csrfToken;
+  }
+  return apiCall(endpoint, options);
+}
+
 // ── Dashboard ─────────────────────────────────────────────────────────────
 async function loadDashboard() {
   try {
@@ -355,16 +358,18 @@ async function loadDashboard() {
     document.getElementById('stat-revenue').textContent  = 'KSh ' + stats.totalRevenue.toLocaleString('en-KE');
     document.getElementById('stat-products').textContent = stats.totalProducts;
     document.getElementById('stat-pending').textContent  = stats.pending;
-    const body = document.getElementById('recent-orders-body');
     const recent = orders.slice(0, 8);
-    if (!recent.length) { body.innerHTML = '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px">No orders yet</td></tr>'; return; }
-    body.innerHTML = recent.map(o => `<tr>
+    const dashboardBody = document.getElementById('recent-orders-body');
+    const sidebarBody   = document.getElementById('sidebar-recent-orders-body');
+    const html = recent.length ? recent.map(o => `<tr>
       <td style="font-family:monospace;font-size:11px;color:var(--orange)">${o.id}</td>
       <td><strong>${o.name}</strong><br><span style="color:#888;font-size:11px">${o.phone}</span></td>
       <td><strong>KSh ${o.total.toLocaleString('en-KE')}</strong></td>
       <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
       <td style="color:#888;font-size:11px">${fmtDate(o.createdAt)}</td>
-    </tr>`).join('');
+    </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px">No orders yet</td></tr>';
+    dashboardBody.innerHTML = html;
+    if (sidebarBody) sidebarBody.innerHTML = html;
   } catch (e) { if (e.message !== 'Unauthorized') showToast('Failed to load dashboard', false); }
 }
 
@@ -406,7 +411,7 @@ function renderOrders(status) {
 
 async function updateOrderStatus(id, status) {
   try {
-    const res = await apiCall(`/api/orders/${encodeURIComponent(id)}`, {
+    const res = await authFetch(`/api/orders/${encodeURIComponent(id)}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ status })
     });
     if (res.ok) { showToast(`Order updated to "${status}"`); loadOrders(); } 
@@ -443,7 +448,7 @@ async function addProduct() {
   const img      = document.getElementById('p-img').value.trim();
   if (!name || !price) { showToast('Name and price are required', false); return; }
   try {
-    const res = await apiCall('/api/products', {
+    const res = await authFetch('/api/products', {
       method:'POST', headers:{'Content-Type':'application/json'},
       body:JSON.stringify({ name, price, category, badge, stock, sizes, img })
     });
@@ -461,7 +466,7 @@ function clearProductForm() {
 async function deleteProduct(id, name) {
   if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
   try {
-    const res = await apiCall(`/api/products/${id}`, { method:'DELETE' });
+    const res = await authFetch(`/api/products/${id}`, { method:'DELETE' });
     if (res.ok) { showToast('Product deleted'); loadProducts(); }
     else showToast('Failed to delete', false);
   } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
