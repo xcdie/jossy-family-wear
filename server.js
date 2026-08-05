@@ -1,3 +1,4 @@
+
 const crypto = require('crypto');
 const { MongoClient, ServerApiVersion } = require('mongodb');
 
@@ -107,18 +108,6 @@ function getRequestIp(req) {
   return req.socket.remoteAddress || 'unknown';
 }
 
-// Constant-time string comparison to avoid timing side-channels on password checks
-function safeCompare(a, b) {
-  const bufA = Buffer.from(String(a));
-  const bufB = Buffer.from(String(b));
-  if (bufA.length !== bufB.length) {
-    // Still run timingSafeEqual against itself to keep timing consistent
-    crypto.timingSafeEqual(bufA, bufA);
-    return false;
-  }
-  return crypto.timingSafeEqual(bufA, bufB);
-}
-
 // ── helpers ──────────────────────────────────────────────────────────────────
 
 function readJSON(file) {
@@ -199,16 +188,7 @@ function bodyJSON(req, maxSize = MAX_BODY_SIZE) {
 const server = http.createServer(async (req, res) => {
   const { pathname, query } = url.parse(req.url, true);
   const API = '';
-  const {method} = req;
-
-  // ── Security headers ──────────────────────────────────────────────────────
-  res.setHeader('Content-Security-Policy', "default-src 'self'");
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  const isSecureReq = req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted);
-  if (isSecureReq) {
-    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
-  }
+const {method} = req;
 
   // CORS (restrict to allowed frontends)
   const {origin} = req.headers;
@@ -254,7 +234,7 @@ const server = http.createServer(async (req, res) => {
 
     try {
       const body = await bodyJSON(req);
-      if (typeof body.password === 'string' && safeCompare(body.password, ADMIN_PASSWORD)) {
+      if (body.password === ADMIN_PASSWORD) {
         loginAttempts.delete(ip);
         const { sessionId, csrfToken } = await generateSession();
         const isSecure = req.headers['x-forwarded-proto'] === 'https' || (req.socket && req.socket.encrypted);
