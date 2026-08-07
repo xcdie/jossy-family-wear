@@ -448,11 +448,16 @@ const {method} = req;
       const orders = readJSON(ORDERS_F);
       const idx    = orders.findIndex(o => o.id === id);
       if (idx === -1) return json(res, 404, { error: 'Order not found' });
-      const status = typeof body.status === 'string' ? body.status.trim() : orders[idx].status;
-      orders[idx].status = status;
-      writeJSON(ORDERS_F, orders);
-      return json(res, 200, orders[idx]);
-    } catch (e) {
+     const ORDER_STATUSES = ['Pending', 'Shipped', 'Delivered'];
+
+const status = typeof body.status === 'string' ? body.status.trim() : orders[idx].status;
+if (!ORDER_STATUSES.includes(status)) {
+  return json(res, 400, { error: `Invalid status. Must be one of: ${ORDER_STATUSES.join(', ')}` });
+}
+orders[idx].status = status;
+writeJSON(ORDERS_F, orders);
+return json(res, 200, orders[idx]);
+ }catch (e) {
       return json(res, 400, { error: e.message === 'Body too large' ? 'Request body too large' : 'Bad JSON' });
     }
   }
