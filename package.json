@@ -6,7 +6,7 @@
     "start": "node server.js"
   },
   "dependencies": {
-    "mongodb": "^7.5.0",
-    "dotenv": "^16.0.0"
+    "helmet": "^8.3.0",
+    "mongodb": "^7.5.0"
   }
 }
