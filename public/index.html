@@ -5,9 +5,10 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>JOSSY SAGIDE — Quality Clothing for the Whole Family</title>
 <style>
+
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --orange: #e85d2f; --orange-light: #f07a52; --orange-pale: #fdf0ea;
+    --orange: #061249; --orange-light: #0f1145; --orange-pale: #fdf0ea;
     --cream: #fdfaf5; --cream-dark: #f5f0e8; --charcoal: #2b2b2b;
     --charcoal-light: #555; --gray: #888; --gray-light: #e8e3dc;
     --blue: #3a6fa8; --blue-light: #eaf0f9; --coral: #e07070;
@@ -17,6 +18,24 @@
   }
   html { scroll-behavior: smooth; overflow-x: hidden; }
   body { font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif; background:var(--cream); color:var(--charcoal); line-height:1.6; font-size:15px; overflow-x: hidden; }
+
+  /* Educational Banner */
+  .edu-banner {
+    width: 100%;
+    display: block;
+    line-height: 0;
+    position: relative;
+    z-index: 1001;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  }
+  .edu-banner img {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+  @media (max-width: 600px) {
+    .edu-banner { box-shadow: none; }
+  }
 
   .topbar { background:var(--charcoal); color:var(--cream); text-align:center; padding:8px 16px; font-size:13px; letter-spacing:.02em; }
   .topbar a { color:var(--orange-light); text-decoration:none; }
@@ -46,7 +65,8 @@
   .mobile-nav a.sale { color:var(--orange); font-weight:700; }
   .mobile-nav.open { display:flex; }
 
-  .hero { background:linear-gradient(135deg,#e85d2f 0%,#f07a52 35%,#f5b98e 65%,#fdfaf5 100%); padding:70px 20px 60px; text-align:center; position:relative; overflow:hidden; }
+
+  .store-banner { background:linear-gradient(135deg,#090d5c 0%,#f07a52 35%,#f5b98e 65%,#fdfaf5 100%); padding:70px 20px 60px; text-align:center; position:relative; overflow:hidden; }
   .hero::before { content:''; position:absolute; inset:0; background:radial-gradient(ellipse at 70% 30%,rgba(255,255,255,.18) 0%,transparent 60%); }
   .hero-inner { position:relative; max-width:680px; margin:0 auto; }
   .hero-tag { display:inline-block; background:rgba(255,255,255,.3); backdrop-filter:blur(4px); border:1px solid rgba(255,255,255,.5); color:white; font-size:12px; font-weight:700; letter-spacing:.1em; text-transform:uppercase; padding:5px 14px; border-radius:20px; margin-bottom:18px; }
@@ -253,6 +273,12 @@
 </style>
 </head>
 <body>
+
+<div class="edu-banner">
+  <a href="https://github.com/xcdie/kollektiv" target="_blank">
+    <img src="images/banner.png" alt="Educational Purpose Only - GitHub: xcdie/kollektiv - Developer: @xcdie">
+  </a>
+</div>
 
 <header>
   <div class="header-inner">
