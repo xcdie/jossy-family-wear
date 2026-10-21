@@ -12,6 +12,7 @@ A complete full-stack web shop for Jossy Sagide, Mbale's favourite family clothi
 | `data/products.json` | Product catalogue |
 | `data/orders.json` | Orders database (grows as orders come in) |
 
+
  API Endpoints
 
  Products
