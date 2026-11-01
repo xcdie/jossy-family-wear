@@ -9,7 +9,8 @@
   :root { --orange:#e85d2f; --orange-light:#f07a52; --orange-pale:#fdf0ea; --charcoal:#2b2b2b; --gray:#888; --gray-light:#e8e3dc; --green:#4a9a6a; --green-bg:#edf7f2; --blue:#3a6fa8; --blue-bg:#eaf0f9; --red:#c0392b; --red-bg:#fdf0f0; --white:#fff; }
   body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; background:#f4f2ee; color:var(--charcoal); font-size:14px; min-height:100vh; }
 
-  .login-page { position:fixed; top:0; left:0; width:100%; height:100vh; background:linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  /* Login */
+  .login-page { position:fixed; top:0; left:0; width:100%; height:100vh; background:linear-gradient(135deg, #2b2b2b 0%, #1a1a1a 100%); display:flex; align-items:center; justify-content:center; z-index:1000; padding:16px; }
   .login-card { background:white; border-radius:12px; padding:48px; box-shadow:0 20px 60px rgba(0,0,0,.3); width:100%; max-width:360px; }
   .login-card h1 { font-size:24px; font-weight:800; margin-bottom:8px; color:var(--charcoal); }
   .login-card p { font-size:13px; color:var(--gray); margin-bottom:32px; }
@@ -19,9 +20,11 @@
   .login-form button { padding:12px 16px; background:var(--orange); color:white; border:none; border-radius:8px; font-size:14px; font-weight:600; cursor:pointer; transition:background .2s; }
   .login-form button:hover { background:var(--orange-light); }
   .login-form button:disabled { background:#ccc; cursor:not-allowed; }
-  .login-error { background:var(--red-bg); color:var(--red); padding:10px 12px; border-radius:6px; font-size:12px; display:none; }
+  .login-error { background:var(--red-bg); color:var(--red); padding:10px 12px; border-radius:6px; font-size:12px; display:none; margin-bottom:16px; }
 
-  .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--charcoal); padding:0; display:flex; flex-direction:column; z-index:10; }
+  /* Sidebar (hidden until logged in) */
+  .sidebar { position:fixed; top:0; left:0; width:220px; height:100vh; background:var(--charcoal); padding:0; display:none; flex-direction:column; z-index:10; }
+  body.logged-in .sidebar { display:flex; }
   .sidebar-logo { padding:20px 18px; border-bottom:1px solid rgba(255,255,255,.1); }
   .sidebar-logo .brand { font-size:16px; font-weight:800; color:var(--orange); }
   .sidebar-logo .sub { font-size:11px; color:rgba(255,255,255,.4); margin-top:2px; }
@@ -33,18 +36,17 @@
   .sidebar-footer { padding:14px 18px; border-top:1px solid rgba(255,255,255,.1); display:flex; flex-direction:column; gap:8px; }
   .sidebar-footer a, .sidebar-footer button { color:rgba(255,255,255,.5); font-size:12px; text-decoration:none; border:none; background:none; cursor:pointer; text-align:left; transition:color .2s; }
   .sidebar-footer a:hover, .sidebar-footer button:hover { color:var(--orange-light); }
-  /* Responsive Table Wrapper */
-  .table-responsive {
-    width: 100%;
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch; 
-  }
-  
-  .table-responsive table {
-    width: 100%;
-    min-width: 650px; /* Forces the table to stay wide enough to read */
-    white-space: nowrap; /* Stops text from wrapping awkwardly */
-  }
+
+  /* Mobile top nav */
+  .mobile-nav { display:none; position:sticky; top:0; z-index:20; background:var(--charcoal); padding:8px 10px; gap:6px; align-items:center; overflow-x:auto; }
+  .mobile-nav .brand { color:var(--orange); font-weight:800; font-size:14px; margin-right:6px; white-space:nowrap; }
+  .mobile-nav button { background:none; border:none; color:rgba(255,255,255,.7); font-size:13px; font-weight:600; padding:7px 12px; border-radius:8px; cursor:pointer; white-space:nowrap; }
+  .mobile-nav button.active { background:var(--orange); color:white; }
+  body.logged-in .mobile-nav.show { display:flex; }
+
+  /* Responsive table wrapper */
+  .table-responsive { width:100%; overflow-x:auto; -webkit-overflow-scrolling:touch; }
+  .table-responsive table { width:100%; min-width:650px; white-space:nowrap; }
 
   .main { margin-left:220px; padding:28px; min-height:100vh; display:none; }
   .main.logged-in { display:block; }
@@ -101,19 +103,19 @@
   .form-actions { grid-column:1/-1; display:flex; gap:10px; margin-top:6px; }
 
   .empty-state { text-align:center; padding:48px 20px; color:var(--gray); }
-  .empty-state .icon { font-size:40px; margin-bottom:12px; }
-
   select.status-select { padding:4px 8px; border:1.5px solid var(--gray-light); border-radius:6px; font-size:12px; cursor:pointer; outline:none; }
+  .product-thumb { width:44px; height:44px; border-radius:6px; object-fit:cover; background:var(--gray-light); display:block; }
+  .product-thumb-empty { width:44px; height:44px; border-radius:6px; background:var(--gray-light); }
 
-  .product-thumb { width:44px; height:44px; border-radius:6px; object-fit:cover; background:var(--gray-light); }
-
-  .toast { position:fixed; bottom:24px; right:24px; background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:400; opacity:0; transition:opacity .3s; pointer-events:none; }
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--charcoal); color:white; padding:12px 20px; border-radius:10px; font-size:13px; font-weight:500; z-index:1100; opacity:0; transition:opacity .3s; pointer-events:none; }
   .toast.show { opacity:1; }
 
   @media (max-width:900px) { .stats-grid { grid-template-columns:repeat(2,1fr); } .form-grid { grid-template-columns:1fr; } }
   @media (max-width:700px) {
-    .sidebar { display:none; } .main { margin-left:0; padding:16px; }
+    .sidebar, body.logged-in .sidebar { display:none; }
+    .main { margin-left:0; padding:16px; min-height:auto; }
     .stats-grid { grid-template-columns:1fr 1fr; }
+    .login-card { padding:32px 24px; }
   }
 </style>
 </head>
@@ -126,40 +128,42 @@
     <p>Enter your password to access the admin panel</p>
     <div class="login-error" id="login-error"></div>
     <form class="login-form" onsubmit="handleLogin(event)">
-      <input type="password" id="admin-password" name="password" placeholder="Password" required autofocus>
-      <button type="submit">Sign In</button>
+      <input type="password" id="admin-password" name="password" placeholder="Password" autocomplete="current-password" required autofocus>
+      <button type="submit" id="login-btn">Sign In</button>
     </form>
   </div>
 </div>
 
-<!-- ADMIN PANEL -->
+<!-- SIDEBAR (desktop) -->
 <div class="sidebar">
   <div class="sidebar-logo">
     <div class="brand">Jossy Sagide</div>
     <div class="sub">Admin Panel</div>
   </div>
   <nav>
-    <div class="card">
-      <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
-      <div class="table-responsive">
-        <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="sidebar-recent-orders-body"></tbody></table>
-      </div>
-    </div>
-    <button class="nav-item active" onclick="showPage('dashboard',this)">
+    <button class="nav-item active" data-page="dashboard" onclick="showPage('dashboard')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
       Dashboard
     </button>
-    <button class="nav-item" onclick="showPage('orders',this)">
+    <button class="nav-item" data-page="orders" onclick="showPage('orders')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 2L3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
       Orders
     </button>
-    <button class="nav-item" onclick="showPage('products',this)">
+    <button class="nav-item" data-page="products" onclick="showPage('products')">
       <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
       Products
     </button>
   </nav>
   <div class="sidebar-footer"><a href="/">← Back to Shop</a><button onclick="logout()">Logout</button></div>
+</div>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav show" id="mobile-nav">
+  <span class="brand">Jossy Sagide</span>
+  <button data-page="dashboard" class="active" onclick="showPage('dashboard')">Dashboard</button>
+  <button data-page="orders" onclick="showPage('orders')">Orders</button>
+  <button data-page="products" onclick="showPage('products')">Products</button>
+  <button onclick="logout()">Logout</button>
 </div>
 
 <div class="main" id="main">
@@ -175,14 +179,17 @@
       <div class="stat-card"><div class="stat-label">Pending Orders</div><div class="stat-value orange" id="stat-pending">—</div></div>
     </div>
     <div class="card">
-      <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders',document.querySelector('[onclick*=orders]'))">View All</button></div>
-      <table><thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-      <tbody id="recent-orders-body"></tbody></table>
+      <div class="card-header"><div class="card-title">Recent Orders</div><button class="btn btn-ghost btn-sm" onclick="showPage('orders')">View All</button></div>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="recent-orders-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
   <!-- ORDERS -->
- 
   <div class="page" id="page-orders">
     <div class="page-title">Orders</div>
     <div class="page-sub">Manage and update customer orders</div>
@@ -194,10 +201,12 @@
         <button class="filter-pill" onclick="filterOrders('Delivered',this)">Delivered</button>
         <button class="filter-pill" onclick="filterOrders('Cancelled',this)">Cancelled</button>
       </div>
-      <table>
-        <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
-        <tbody id="orders-body"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Order ID</th><th>Customer</th><th>Phone</th><th>Items</th><th>Total</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody id="orders-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -208,24 +217,26 @@
     <div class="card">
       <div class="card-header"><div class="card-title">Add New Product</div></div>
       <div class="form-grid" id="add-product-form">
-        <div class="form-group"><label>Product Name *</label><input type="text" id="p-name" placeholder="e.g. Classic Polo Shirt"></div>
-        <div class="form-group"><label>Price (KSh) *</label><input type="number" id="p-price" placeholder="e.g. 1200"></div>
-        <div class="form-group"><label>Category *</label>
+        <div class="form-group"><label for="p-name">Product Name *</label><input type="text" id="p-name" placeholder="e.g. Classic Polo Shirt"></div>
+        <div class="form-group"><label for="p-price">Price (KSh) *</label><input type="number" id="p-price" min="1" placeholder="e.g. 1200"></div>
+        <div class="form-group"><label for="p-category">Category *</label>
           <select id="p-category"><option value="Men">Men</option><option value="Women">Women</option><option value="Kids">Kids</option></select>
         </div>
-        <div class="form-group"><label>Badge (optional)</label><input type="text" id="p-badge" placeholder="e.g. New, Popular, Sale"></div>
-        <div class="form-group"><label>Stock</label><input type="number" id="p-stock" placeholder="e.g. 50"></div>
-        <div class="form-group"><label>Sizes (comma-separated)</label><input type="text" id="p-sizes" placeholder="S, M, L, XL" value="S,M,L,XL"></div>
-        <div class="form-group full"><label>Image URL</label><input type="url" id="p-img" placeholder="https://images.unsplash.com/..."></div>
+        <div class="form-group"><label for="p-badge">Badge (optional)</label><input type="text" id="p-badge" placeholder="e.g. New, Popular, Sale"></div>
+        <div class="form-group"><label for="p-stock">Stock</label><input type="number" id="p-stock" min="0" placeholder="e.g. 50"></div>
+        <div class="form-group"><label for="p-sizes">Sizes (comma-separated)</label><input type="text" id="p-sizes" placeholder="S, M, L, XL" value="S,M,L,XL"></div>
+        <div class="form-group full"><label for="p-img">Image URL</label><input type="url" id="p-img" placeholder="https://images.unsplash.com/..."></div>
         <div class="form-actions"><button class="btn btn-orange" onclick="addProduct()">Add Product</button><button class="btn btn-ghost" onclick="clearProductForm()">Clear</button></div>
       </div>
     </div>
     <div class="card">
       <div class="card-header"><div class="card-title">All Products</div><button class="btn btn-ghost btn-sm" onclick="loadProducts()">Refresh</button></div>
-      <table>
-        <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
-        <tbody id="products-body"></tbody>
-      </table>
+      <div class="table-responsive">
+        <table>
+          <thead><tr><th>Image</th><th>Name</th><th>Category</th><th>Price</th><th>Stock</th><th>Sizes</th><th>Actions</th></tr></thead>
+          <tbody id="products-body"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -236,12 +247,20 @@
 <script>
 const API = '';
 let csrfToken = sessionStorage.getItem('csrfToken') || null;
-
-// ── Auth ──────────────────────────────────────────────────────────────────
 let isAuthenticated = false;
 
-// Checks auth status via the server, since the session cookie is HttpOnly
-// and therefore invisible to client-side JS (document.cookie) by design.
+// ── Helpers ───────────────────────────────────────────────────────────────
+// Escape any server/user-supplied text before putting it into innerHTML (prevents XSS)
+function esc(v) {
+  return String(v ?? '').replace(/[&<>"']/g, c => ({ '&':'&amp;', '<':'&lt;', '>':'&gt;', '"':'&quot;', "'":'&#39;' }[c]));
+}
+function num(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
+function money(v) { return num(v).toLocaleString('en-KE'); }
+// Only allow http(s) image URLs
+function safeUrl(u) { return /^https?:\/\//i.test(String(u || '')) ? u : ''; }
+
+// ── Auth ──────────────────────────────────────────────────────────────────
+// The session cookie is HttpOnly, so ask the server whether we're logged in.
 async function checkAuth() {
   try {
     const res  = await fetch(`${API}/api/me`);
@@ -251,13 +270,16 @@ async function checkAuth() {
     isAuthenticated = false;
   }
 
+  document.body.classList.toggle('logged-in', isAuthenticated);
+  document.getElementById('main').classList.toggle('logged-in', isAuthenticated);
+  document.getElementById('login-page').style.display = isAuthenticated ? 'none' : 'flex';
+
   if (isAuthenticated) {
-    document.getElementById('login-page').style.display = 'none';
-    document.getElementById('main').classList.add('logged-in');
     loadDashboard();
   } else {
-    document.getElementById('login-page').style.display = 'flex';
-    document.getElementById('main').classList.remove('logged-in');
+    // Clear stale data so it isn't visible to the next person
+    allOrders = [];
+    ['recent-orders-body','orders-body','products-body'].forEach(id => document.getElementById(id).innerHTML = '');
   }
 }
 
@@ -265,6 +287,8 @@ async function handleLogin(event) {
   event.preventDefault();
   const password = document.getElementById('admin-password').value;
   const errorDiv = document.getElementById('login-error');
+  const btn      = document.getElementById('login-btn');
+  btn.disabled = true;
 
   try {
     const res = await fetch(`${API}/api/login`, {
@@ -272,11 +296,11 @@ async function handleLogin(event) {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ password })
     });
-    const data = await res.json();
+    const data = await res.json().catch(() => ({}));
 
     if (res.ok && data.csrfToken) {
       errorDiv.style.display = 'none';
-      document.getElementById('admin-password').value = '';    
+      document.getElementById('admin-password').value = '';
       csrfToken = data.csrfToken;
       sessionStorage.setItem('csrfToken', csrfToken);
       await checkAuth();
@@ -287,37 +311,39 @@ async function handleLogin(event) {
   } catch (e) {
     errorDiv.textContent = 'Login failed. Please try again.';
     errorDiv.style.display = 'block';
+  } finally {
+    btn.disabled = false;
   }
 }
 
 async function logout() {
-  if (confirm('Are you sure you want to logout?')) {
-    try {
-      await authFetch('/api/logout', { method: 'POST' });
-    } catch (e) {}
-    csrfToken = null;
-    sessionStorage.removeItem('csrfToken');
-    checkAuth();
-  }
+  if (!confirm('Are you sure you want to logout?')) return;
+  try { await authFetch('/api/logout', { method: 'POST' }); } catch (e) {}
+  csrfToken = null;
+  sessionStorage.removeItem('csrfToken');
+  showPage('dashboard', true);
+  checkAuth();
 }
 
 // ── UI Helpers ────────────────────────────────────────────────────────────
-function showPage(id, btn) {
+function showPage(id, skipLoad) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('[data-page]').forEach(b => b.classList.toggle('active', b.dataset.page === id));
   document.getElementById('page-' + id).classList.add('active');
-  if (btn) btn.classList.add('active');
+  if (skipLoad) return;
   if (id === 'dashboard') loadDashboard();
   if (id === 'orders')    loadOrders();
   if (id === 'products')  loadProducts();
 }
 
+let toastTimer;
 function showToast(msg, ok) {
   const t = document.getElementById('toast');
   t.textContent = msg;
   t.style.background = ok === false ? '#c0392b' : '#2b2b2b';
   t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3000);
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
 }
 
 function badgeClass(status) {
@@ -326,7 +352,9 @@ function badgeClass(status) {
 }
 
 function fmtDate(iso) {
-  return new Date(iso).toLocaleString('en-KE', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
+  const d = new Date(iso);
+  if (isNaN(d)) return '—';
+  return d.toLocaleString('en-KE', { day:'numeric', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' });
 }
 
 // ── API Helper ────────────────────────────────────────────────────────────
@@ -342,9 +370,7 @@ async function apiCall(endpoint, options = {}) {
 
 function authFetch(endpoint, options = {}) {
   options.headers = { ...(options.headers || {}) };
-  if (csrfToken) {
-    options.headers['X-CSRF-Token'] = csrfToken;
-  }
+  if (csrfToken) options.headers['X-CSRF-Token'] = csrfToken;
   return apiCall(endpoint, options);
 }
 
@@ -352,61 +378,66 @@ function authFetch(endpoint, options = {}) {
 async function loadDashboard() {
   try {
     const [statsRes, ordersRes] = await Promise.all([apiCall('/api/stats'), apiCall('/api/orders')]);
+    if (!statsRes.ok || !ordersRes.ok) throw new Error('Bad response');
     const stats  = await statsRes.json();
     const orders = await ordersRes.json();
-    document.getElementById('stat-orders').textContent   = stats.totalOrders;
-    document.getElementById('stat-revenue').textContent  = 'KSh ' + stats.totalRevenue.toLocaleString('en-KE');
-    document.getElementById('stat-products').textContent = stats.totalProducts;
-    document.getElementById('stat-pending').textContent  = stats.pending;
-    const recent = orders.slice(0, 8);
-    const dashboardBody = document.getElementById('recent-orders-body');
-    const sidebarBody   = document.getElementById('sidebar-recent-orders-body');
-    const html = recent.length ? recent.map(o => `<tr>
-      <td style="font-family:monospace;font-size:11px;color:var(--orange)">${o.id}</td>
-      <td><strong>${o.name}</strong><br><span style="color:#888;font-size:11px">${o.phone}</span></td>
-      <td><strong>KSh ${o.total.toLocaleString('en-KE')}</strong></td>
-      <td><span class="badge ${badgeClass(o.status)}">${o.status}</span></td>
+    document.getElementById('stat-orders').textContent   = num(stats.totalOrders);
+    document.getElementById('stat-revenue').textContent  = 'KSh ' + money(stats.totalRevenue);
+    document.getElementById('stat-products').textContent = num(stats.totalProducts);
+    document.getElementById('stat-pending').textContent  = num(stats.pending);
+
+    const recent = (Array.isArray(orders) ? orders : []).slice(0, 8);
+    document.getElementById('recent-orders-body').innerHTML = recent.length ? recent.map(o => `<tr>
+      <td style="font-family:monospace;font-size:11px;color:var(--orange)">${esc(o.id)}</td>
+      <td><strong>${esc(o.name)}</strong><br><span style="color:#888;font-size:11px">${esc(o.phone)}</span></td>
+      <td><strong>KSh ${money(o.total)}</strong></td>
+      <td><span class="badge ${badgeClass(o.status)}">${esc(o.status)}</span></td>
       <td style="color:#888;font-size:11px">${fmtDate(o.createdAt)}</td>
     </tr>`).join('') : '<tr><td colspan="5" style="text-align:center;color:#888;padding:24px">No orders yet</td></tr>';
-    dashboardBody.innerHTML = html;
-    if (sidebarBody) sidebarBody.innerHTML = html;
   } catch (e) { if (e.message !== 'Unauthorized') showToast('Failed to load dashboard', false); }
 }
 
 // ── Orders ────────────────────────────────────────────────────────────────
 let allOrders = [];
+let currentOrderFilter = '';
 
-async function loadOrders(statusFilter) {
+async function loadOrders() {
   try {
     const res = await apiCall('/api/orders');
-    allOrders = await res.json();
-    renderOrders(statusFilter || '');
+    if (!res.ok) throw new Error('Bad response');
+    const data = await res.json();
+    allOrders = Array.isArray(data) ? data : [];
+    renderOrders();
   } catch (e) { if (e.message !== 'Unauthorized') showToast('Failed to load orders', false); }
 }
 
 function filterOrders(status, btn) {
+  currentOrderFilter = status;
   document.querySelectorAll('#order-filters .filter-pill').forEach(b => b.classList.remove('active'));
   if (btn) btn.classList.add('active');
-  renderOrders(status);
+  renderOrders();
 }
 
-function renderOrders(status) {
-  const filtered = status ? allOrders.filter(o => o.status === status) : allOrders;
+function renderOrders() {
+  const filtered = currentOrderFilter ? allOrders.filter(o => o.status === currentOrderFilter) : allOrders;
   const body = document.getElementById('orders-body');
   if (!filtered.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">No orders</td></tr>'; return; }
-  body.innerHTML = filtered.map(o => `<tr>
-    <td style="font-family:monospace;font-size:11px;color:var(--orange)">${o.id}</td>
-    <td><strong>${o.name}</strong><br><span style="color:#888;font-size:11px">${o.address}</span></td>
-    <td><a href="tel:${o.phone}" style="color:var(--blue)">${o.phone}</a></td>
-    <td>${o.items.map(i => `${i.name} ×${i.qty} (${i.size})`).join('<br>')}</td>
-    <td><strong>KSh ${o.total.toLocaleString('en-KE')}</strong></td>
+  body.innerHTML = filtered.map(o => {
+    const items = Array.isArray(o.items) ? o.items : [];
+    return `<tr>
+    <td style="font-family:monospace;font-size:11px;color:var(--orange)">${esc(o.id)}</td>
+    <td><strong>${esc(o.name)}</strong><br><span style="color:#888;font-size:11px">${esc(o.address)}</span></td>
+    <td><a href="tel:${esc(o.phone)}" style="color:var(--blue)">${esc(o.phone)}</a></td>
+    <td>${items.map(i => `${esc(i.name)} ×${esc(i.qty)} (${esc(i.size)})`).join('<br>')}</td>
+    <td><strong>KSh ${money(o.total)}</strong></td>
     <td>
-      <select class="status-select" onchange="updateOrderStatus('${o.id}',this.value)">
+      <select class="status-select" data-id="${esc(o.id)}" onchange="updateOrderStatus(this.dataset.id, this.value)">
         ${['Pending','Shipped','Delivered','Cancelled'].map(s => `<option value="${s}" ${o.status===s?'selected':''}>${s}</option>`).join('')}
       </select>
     </td>
     <td style="color:#888;font-size:11px;white-space:nowrap">${fmtDate(o.createdAt)}</td>
-  </tr>`).join('');
+  </tr>`;
+  }).join('');
 }
 
 async function updateOrderStatus(id, status) {
@@ -414,27 +445,35 @@ async function updateOrderStatus(id, status) {
     const res = await authFetch(`/api/orders/${encodeURIComponent(id)}`, {
       method:'PATCH', headers:{'Content-Type':'application/json'}, body:JSON.stringify({ status })
     });
-    if (res.ok) { showToast(`Order updated to "${status}"`); loadOrders(); } 
-    else showToast('Failed to update order', false);
-  } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
+    if (res.ok) { showToast(`Order updated to "${status}"`); loadOrders(); }
+    else { showToast('Failed to update order', false); loadOrders(); }
+  } catch (e) { if (e.message !== 'Unauthorized') { showToast('Network error', false); loadOrders(); } }
 }
 
 // ── Products ──────────────────────────────────────────────────────────────
+let productsCache = [];
+
 async function loadProducts() {
   try {
-    const res  = await fetch(`${API}/api/products`);
-    const products = await res.json();
+    const res = await fetch(`${API}/api/products`);
+    if (!res.ok) throw new Error('Bad response');
+    const data = await res.json();
+    productsCache = Array.isArray(data) ? data : [];
     const body = document.getElementById('products-body');
-    if (!products.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">No products</td></tr>'; return; }
-    body.innerHTML = products.map(p => `<tr>
-      <td><img class="product-thumb" src="${p.img}" alt="${p.name}" onerror="this.style.display='none'"></td>
-      <td><strong>${p.name}</strong>${p.badge ? ` <span style="font-size:10px;background:var(--orange-pale);color:var(--orange);padding:1px 6px;border-radius:4px">${p.badge}</span>` : ''}</td>
-      <td>${p.category}</td>
-      <td><strong>KSh ${p.price.toLocaleString('en-KE')}</strong></td>
+    if (!productsCache.length) { body.innerHTML = '<tr><td colspan="7" style="text-align:center;color:#888;padding:24px">No products</td></tr>'; return; }
+    body.innerHTML = productsCache.map(p => {
+      const img = safeUrl(p.img);
+      const sizes = Array.isArray(p.sizes) ? p.sizes : [];
+      return `<tr>
+      <td>${img ? `<img class="product-thumb" src="${esc(img)}" alt="${esc(p.name)}" onerror="this.outerHTML='<div class=&quot;product-thumb-empty&quot;></div>'">` : '<div class="product-thumb-empty"></div>'}</td>
+      <td><strong>${esc(p.name)}</strong>${p.badge ? ` <span style="font-size:10px;background:var(--orange-pale);color:var(--orange);padding:1px 6px;border-radius:4px">${esc(p.badge)}</span>` : ''}</td>
+      <td>${esc(p.category)}</td>
+      <td><strong>KSh ${money(p.price)}</strong></td>
       <td>${p.stock ?? '—'}</td>
-      <td>${p.sizes.join(', ')}</td>
-      <td><button class="btn btn-danger btn-sm" onclick="deleteProduct(${p.id},'${p.name.replace(/'/g,"\\'")}')">Delete</button></td>
-    </tr>`).join('');
+      <td>${esc(sizes.join(', '))}</td>
+      <td><button class="btn btn-danger btn-sm" data-id="${esc(p.id)}" onclick="deleteProduct(this.dataset.id)">Delete</button></td>
+    </tr>`;
+    }).join('');
   } catch (e) { showToast('Failed to load products', false); }
 }
 
@@ -443,10 +482,11 @@ async function addProduct() {
   const price    = parseInt(document.getElementById('p-price').value, 10);
   const category = document.getElementById('p-category').value;
   const badge    = document.getElementById('p-badge').value.trim() || null;
-  const stock    = parseInt(document.getElementById('p-stock').value, 10) || 0;
+  const stock    = Math.max(0, parseInt(document.getElementById('p-stock').value, 10) || 0);
   const sizes    = document.getElementById('p-sizes').value.split(',').map(s => s.trim()).filter(Boolean);
   const img      = document.getElementById('p-img').value.trim();
-  if (!name || !price) { showToast('Name and price are required', false); return; }
+  if (!name || !price || price < 1) { showToast('Name and a valid price are required', false); return; }
+  if (img && !safeUrl(img)) { showToast('Image URL must start with http:// or https://', false); return; }
   try {
     const res = await authFetch('/api/products', {
       method:'POST', headers:{'Content-Type':'application/json'},
@@ -463,16 +503,17 @@ function clearProductForm() {
   document.getElementById('p-category').value = 'Men';
 }
 
-async function deleteProduct(id, name) {
+async function deleteProduct(id) {
+  const product = productsCache.find(p => String(p.id) === String(id));
+  const name = product ? product.name : 'this product';
   if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
   try {
-    const res = await authFetch(`/api/products/${id}`, { method:'DELETE' });
+    const res = await authFetch(`/api/products/${encodeURIComponent(id)}`, { method:'DELETE' });
     if (res.ok) { showToast('Product deleted'); loadProducts(); }
     else showToast('Failed to delete', false);
   } catch (e) { if (e.message !== 'Unauthorized') showToast('Network error', false); }
 }
 
-// ── Init ──────────────────────────────────────────────────────────────────
 checkAuth();
 </script>
 </body>
